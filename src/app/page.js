@@ -209,10 +209,10 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td style={tdStyle}>
-                        <div style={{ fontWeight: 500 }}>{inv.customer_name || '—'}</div>
+                        <div style={{ fontWeight: 500 }}>{inv.customer_name || '-'}</div>
                       </td>
                       <td style={{ ...tdStyle, color: 'var(--muted)', fontSize: '13px' }}>
-                        {inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                        {inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
                       </td>
                       <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>
                         {formatCurrency(grandTotal)}
@@ -232,7 +232,7 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td style={{ ...tdStyle, color: 'var(--muted)', fontSize: '13px' }}>
-                        {inv.creator_name || '—'}
+                        {inv.creator_name || '-'}
                       </td>
                       <td style={{ ...tdStyle, textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
                         <Link

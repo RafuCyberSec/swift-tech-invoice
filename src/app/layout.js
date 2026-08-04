@@ -2,7 +2,7 @@ import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
 
 export const metadata = {
-  title: "Swift Tech & Games — Invoice Manager",
+  title: "Swift Tech & Games - Invoice Manager",
   description: "Professional invoice generator for Swift Tech & Games",
 };
 
