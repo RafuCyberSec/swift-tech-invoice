@@ -255,12 +255,12 @@ export default function InvoiceTemplate({ invoice = {}, settings = {}, scale = 1
             <thead>
               <tr style={{ backgroundColor: '#fafafa' }}>
                 <th style={{ ...thStyle, width: '5%', textAlign: 'center' }}>Sr</th>
-                <th style={{ ...thStyle, width: '40%', textAlign: 'left' }}>Item Name</th>
+                <th style={{ ...thStyle, width: '35%', textAlign: 'left' }}>Item Name</th>
                 <th style={{ ...thStyle, width: '14%', textAlign: 'left' }}>Warranty</th>
                 <th style={{ ...thStyle, width: '15%', textAlign: 'left' }}>Serial Number</th>
-                <th style={{ ...thStyle, width: '10%', textAlign: 'center' }}>Quantity</th>
-                <th style={{ ...thStyle, width: '8%', textAlign: 'right' }}>Rate</th>
-                <th style={{ ...thStyle, width: '8%', textAlign: 'right' }}>Amount</th>
+                <th style={{ ...thStyle, width: '11%', textAlign: 'center' }}>Quantity</th>
+                <th style={{ ...thStyle, width: '10%', textAlign: 'right' }}>Rate</th>
+                <th style={{ ...thStyle, width: '10%', textAlign: 'right' }}>Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -421,7 +421,7 @@ export default function InvoiceTemplate({ invoice = {}, settings = {}, scale = 1
         </div>
 
         {/* BOTTOM SECTION: Notes & Terms (pushed down to fill A4 page gracefully) */}
-        <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
+        <div style={{ marginTop: '40px' }}>
           {/* ====== 7. NOTES ====== */}
           {notes && (
             <div style={{ marginBottom: '24px' }}>

@@ -238,12 +238,12 @@ function buildInvoiceHtml(invoice, settings) {
         <thead>
           <tr style="background:#fafafa">
             <th style="padding:8px 6px;font-size:11px;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:center;width:5%">Sr</th>
-            <th style="padding:8px 6px;font-size:11px;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:left;width:40%">Item Name</th>
+            <th style="padding:8px 6px;font-size:11px;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:left;width:35%">Item Name</th>
             <th style="padding:8px 6px;font-size:11px;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:left;width:14%">Warranty</th>
             <th style="padding:8px 6px;font-size:11px;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:left;width:15%">Serial Number</th>
-            <th style="padding:8px 6px;font-size:11px;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:center;width:10%">Quantity</th>
-            <th style="padding:8px 6px;font-size:11px;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:right;width:8%">Rate</th>
-            <th style="padding:8px 6px;font-size:11px;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:right;width:8%">Amount</th>
+            <th style="padding:8px 6px;font-size:11px;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:center;width:11%">Quantity</th>
+            <th style="padding:8px 6px;font-size:11px;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:right;width:10%">Rate</th>
+            <th style="padding:8px 6px;font-size:11px;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:right;width:10%">Amount</th>
           </tr>
         </thead>
         <tbody>${lineItemsHtml}</tbody>
@@ -281,7 +281,7 @@ function buildInvoiceHtml(invoice, settings) {
     </div>
 
     <!-- Bottom Section: Notes & Terms -->
-    <div style="margin-top:auto;padding-top:20px">
+    <div style="margin-top:40px">
       ${notes ? `
         <div style="margin-bottom:24px">
           <div style="font-weight:700;font-size:12.5px;color:#1a1a1a;margin-bottom:6px">Notes</div>

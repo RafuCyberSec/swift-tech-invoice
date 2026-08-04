@@ -37,9 +37,10 @@ export default function NewInvoicePage() {
         const data = await res.json();
         setSettings(data);
         // Set default notes and terms from settings
+        const savedNotes = localStorage.getItem('default_invoice_notes');
         setFormData(prev => ({
           ...prev,
-          notes: prev.notes || data.default_notes || '',
+          notes: prev.notes || savedNotes || data.default_notes || '',
           terms: prev.terms || data.default_terms || '',
         }));
       }
@@ -89,6 +90,9 @@ export default function NewInvoicePage() {
   const handleSave = async (status = 'draft') => {
     setSaving(true);
     setMessage('');
+
+    // Save notes to localStorage to persist across new invoices
+    localStorage.setItem('default_invoice_notes', formData.notes);
 
     try {
       const res = await fetch('/api/invoices', {
