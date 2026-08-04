@@ -2,7 +2,10 @@ import initSqlJs from 'sql.js';
 import path from 'path';
 import fs from 'fs';
 
-const DB_DIR = path.join(process.cwd(), 'database');
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL;
+const DB_DIR = isVercel 
+  ? path.join('/tmp', 'database') 
+  : path.join(process.cwd(), 'database');
 const DB_PATH = path.join(DB_DIR, 'invoices.db');
 
 let _db = null;
