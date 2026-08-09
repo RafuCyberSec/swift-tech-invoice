@@ -43,7 +43,7 @@ export default function ResponsivePreviewWrapper({ children, targetWidth = 800, 
       >
         <div 
           style={{ 
-            transform: \scale(\)\, 
+            transform: `scale(${scale})`, 
             transformOrigin: 'top left',
             position: 'absolute',
             top: 0,
