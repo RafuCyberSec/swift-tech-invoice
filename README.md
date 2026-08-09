@@ -30,15 +30,6 @@ npm run dev
 
 That's literally it. The database auto-generates itself on the first run.
 
-## Default Credentials
-
-If you're booting this up for the first time, you can log in right away using the baked-in admin account. 
-
-**Email:** `rafay@swifttechngames.com`
-**Password:** `RafuCyberSec@2001`
-
-We highly recommend changing this password immediately after your first login if you plan on exposing this to the web.
-
 ## Tech Stack
 
 We kept it modern and clean:

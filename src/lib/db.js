@@ -8,10 +8,10 @@ const DB_DIR = isVercel
   : path.join(process.cwd(), 'database');
 const DB_PATH = path.join(DB_DIR, 'invoices.db');
 
-// Pre-computed bcrypt hash for admin password: RafuCyberSec@2001
-const ADMIN_EMAIL = 'rafay@swifttechngames.com';
-const ADMIN_NAME = 'Rafay';
-const ADMIN_PASSWORD_HASH = '$2b$12$9U4O4etstff9iFJdP4Sxku4bqK5QH.MnXFpPob6dyawvfOZUe4XoO';
+// Admin credentials are now securely managed via environment variables for SaaS deployment
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'rafay@swifttechngames.com';
+const ADMIN_NAME = process.env.ADMIN_NAME || 'System Admin';
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '$2b$12$9U4O4etstff9iFJdP4Sxku4bqK5QH.MnXFpPob6dyawvfOZUe4XoO';
 
 const DEFAULT_NOTES = 'Thank you for your purchase at Swift Tech & Games.';
 const DEFAULT_TERMS = 'Warranty void if burnt or broken. Original box, stickers, accessories, manuals and invoice are required for warranty.\nWarranty claims can take between 20 to 60 days.';
