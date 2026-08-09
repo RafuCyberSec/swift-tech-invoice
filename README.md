@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Swift Tech Invoice Manager
 
-## Getting Started
+Welcome to the official Swift Tech & Games Invoice Manager. We built this to be lightning fast, beautifully responsive, and incredibly easy to plug right into our SaaS ecosystem.
 
-First, run the development server:
+If you hate bloated software, you'll love this. It runs entirely on Next.js with a snappy local SQLite database, meaning it's lightweight, completely secure, and requires zero messy cloud configuration to get going.
 
+## What makes it special?
+
+* **No lag, no wait.** It boots instantly. The database runs completely locally and dumps to a single `.db` file.
+* **Pixel-perfect A4 printing.** When you hit print, you get a gorgeous, perfectly scaled A4 invoice that looks identical on screen and on paper.
+* **Fluid mobile design.** Generate invoices from your phone without fighting the layout. The UI actively watches your screen size and scales the live preview so nothing ever gets cut off.
+* **Plug and play.** It's built to slide right into the Swift Tech SaaS suite. 
+* **Built-in authentication.** Secure admin accounts, session persistence, and instant login out of the box.
+
+## Getting it running
+
+You don't need a DevOps degree to spin this up. Just grab the code, install the dependencies, and start the engine.
+
+1. Install the packages:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Boot the development server:
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+3. Open your browser and head to `http://localhost:3000`. 
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+That's literally it. The database auto-generates itself on the first run.
 
-## Learn More
+## Default Credentials
 
-To learn more about Next.js, take a look at the following resources:
+If you're booting this up for the first time, you can log in right away using the baked-in admin account. 
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Email:** `rafay@swifttechngames.com`
+**Password:** `RafuCyberSec@2001`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+We highly recommend changing this password immediately after your first login if you plan on exposing this to the web.
 
-## Deploy on Vercel
+## Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+We kept it modern and clean:
+* **Next.js 16** for the framework and API routing.
+* **NextAuth** handling the security and session cookies.
+* **SQL.js** managing the local database.
+* **Puppeteer** doing the heavy lifting for perfectly rendered PDF generation.
+* **Vanilla CSS** because frameworks like Tailwind sometimes just get in the way of building a truly custom, beautiful interface.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Notes on Deployment
+
+If you are throwing this onto a server or VPS, just make sure the `database` folder has write permissions so the `.db` file can save your invoices safely. If you are deploying to a serverless environment like Vercel, be aware that local SQLite files wipe on every new deployment, so you'll want to map the storage to something persistent.
+
+Enjoy generating invoices that actually look good!
