@@ -12,23 +12,7 @@ If you hate bloated software, you'll love this. It runs entirely on Next.js with
 * **Plug and play.** It's built to slide right into the Swift Tech SaaS suite. 
 * **Built-in authentication.** Secure admin accounts, session persistence, and instant login out of the box.
 
-## Getting it running
 
-You don't need a DevOps degree to spin this up. Just grab the code, install the dependencies, and start the engine.
-
-1. Install the packages:
-```bash
-npm install
-```
-
-2. Boot the development server:
-```bash
-npm run dev
-```
-
-3. Open your browser and head to `http://localhost:3000`. 
-
-That's literally it. The database auto-generates itself on the first run.
 
 ## Tech Stack
 
@@ -38,9 +22,5 @@ We kept it modern and clean:
 * **SQL.js** managing the local database.
 * **Puppeteer** doing the heavy lifting for perfectly rendered PDF generation.
 * **Vanilla CSS** because frameworks like Tailwind sometimes just get in the way of building a truly custom, beautiful interface.
-
-## Notes on Deployment
-
-If you are throwing this onto a server or VPS, just make sure the `database` folder has write permissions so the `.db` file can save your invoices safely. If you are deploying to a serverless environment like Vercel, be aware that local SQLite files wipe on every new deployment, so you'll want to map the storage to something persistent.
 
 Enjoy generating invoices that actually look good!
