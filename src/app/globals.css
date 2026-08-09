@@ -624,8 +624,6 @@ body {
   padding: 32px;
   display: flex;
   justify-content: center;
-  container-type: inline-size;
-  container-name: preview;
 }
 
 .mobile-preview-toggle {
@@ -641,15 +639,6 @@ body {
   display: flex;
   justify-content: center;
   overflow-x: hidden;
-  container-type: inline-size;
-  container-name: preview;
-}
-
-@container preview (max-width: 820px) {
-  .invoice-template-root {
-    transform: scale(calc(100cqw / 820)) !important;
-    transform-origin: top center !important;
-  }
 }
 
 /* ============================================================

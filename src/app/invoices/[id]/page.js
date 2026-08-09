@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import InvoiceTemplate from '@/components/InvoiceTemplate';
+import ResponsivePreviewWrapper from '@/components/ResponsivePreviewWrapper';
 
 export default function InvoiceDetailPage({ params }) {
   const { id } = use(params);
@@ -206,25 +207,30 @@ export default function InvoiceDetailPage({ params }) {
         {/* Invoice preview */}
         <div
           style={{
-            padding: '40px',
+            padding: '24px 16px',
             display: 'flex',
             justifyContent: 'center',
-            overflowX: 'auto',
+            width: '100%',
           }}
           className="invoice-detail-preview"
         >
-          <div
-            style={{
-              boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
-              borderRadius: '4px',
-              overflow: 'hidden',
-            }}
-          >
-            <InvoiceTemplate
-              invoice={templateInvoice}
-              settings={settings || {}}
-            />
-          </div>
+          <ResponsivePreviewWrapper>
+            <div
+              style={{
+                boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
+                borderRadius: '4px',
+                overflow: 'hidden',
+                background: '#fff',
+                width: '100%',
+                height: '100%'
+              }}
+            >
+              <InvoiceTemplate
+                invoice={templateInvoice}
+                settings={settings || {}}
+              />
+            </div>
+          </ResponsivePreviewWrapper>
         </div>
       </main>
     </div>

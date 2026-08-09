@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import InvoiceTemplate from '@/components/InvoiceTemplate';
+import ResponsivePreviewWrapper from '@/components/ResponsivePreviewWrapper';
 
 export default function NewInvoicePage() {
   const router = useRouter();
@@ -454,21 +455,24 @@ export default function NewInvoicePage() {
 
         {/* RIGHT: Live Preview */}
         <div className={`invoice-preview-panel ${showPreview ? '' : 'hide-on-mobile'}`}>
-          <div style={{ transformOrigin: 'top center' }}>
+          <ResponsivePreviewWrapper>
             <div
               style={{
                 boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
                 borderRadius: '4px',
                 overflow: 'hidden',
+                background: '#fff',
+                width: '100%',
+                height: '100%'
               }}
             >
               <InvoiceTemplate
                 invoice={previewInvoice}
                 settings={settings || {}}
-                scale={0.75}
+                scale={1}
               />
             </div>
-          </div>
+          </ResponsivePreviewWrapper>
         </div>
       </main>
     </div>
