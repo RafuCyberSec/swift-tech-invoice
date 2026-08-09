@@ -61,7 +61,422 @@ body {
   background: #9ca3af;
 }
 
-/* Utility classes */
+/* ============================================================
+   KEYFRAME ANIMATIONS
+   ============================================================ */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideOutLeft {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(204, 25, 244, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(204, 25, 244, 0.4); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes splashLogoIn {
+  0% { opacity: 0; transform: scale(0.3) rotate(-10deg); }
+  60% { opacity: 1; transform: scale(1.1) rotate(2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+@keyframes splashTextIn {
+  0% { opacity: 0; transform: translateY(20px); letter-spacing: 0.3em; }
+  100% { opacity: 1; transform: translateY(0); letter-spacing: 0.05em; }
+}
+
+@keyframes splashGlow {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+  100% { opacity: 0.3; transform: scale(1); }
+}
+
+@keyframes splashLoad {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+@keyframes particleFloat {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  20% { opacity: 0.6; }
+  80% { opacity: 0.3; }
+  100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+}
+
+@keyframes welcomePulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+/* Animation utility classes */
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out both;
+}
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out both;
+}
+.animate-slide-down {
+  animation: slideDown 0.4s ease-out both;
+}
+.animate-scale-in {
+  animation: scaleIn 0.5s ease-out both;
+}
+
+/* ============================================================
+   SPLASH SCREEN
+   ============================================================ */
+
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0a0a0f 0%, #12121f 40%, #0f0f1a 100%);
+  transition: opacity 0.6s ease-out;
+}
+
+.splash-fade-out {
+  opacity: 0;
+}
+
+.splash-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.splash-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--brand);
+  border-radius: 50%;
+  animation: particleFloat linear infinite;
+}
+
+.splash-particle-1 { left: 10%; bottom: -10px; animation-duration: 6s; animation-delay: 0s; width: 3px; height: 3px; }
+.splash-particle-2 { left: 30%; bottom: -10px; animation-duration: 8s; animation-delay: 1s; width: 5px; height: 5px; }
+.splash-particle-3 { left: 60%; bottom: -10px; animation-duration: 7s; animation-delay: 0.5s; width: 3px; height: 3px; }
+.splash-particle-4 { left: 80%; bottom: -10px; animation-duration: 9s; animation-delay: 2s; width: 4px; height: 4px; }
+
+.splash-glow-ring {
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(204, 25, 244, 0.15) 0%, transparent 70%);
+  animation: splashGlow 1.5s ease-out both;
+}
+
+.splash-logo-container {
+  position: relative;
+  z-index: 1;
+  animation: splashLogoIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+}
+
+.splash-logo {
+  height: 100px;
+  width: auto;
+  filter: drop-shadow(0 0 30px rgba(204, 25, 244, 0.4));
+}
+
+.splash-text {
+  position: relative;
+  z-index: 1;
+  margin-top: 24px;
+  font-size: 28px;
+  font-weight: 700;
+  animation: splashTextIn 0.6s ease-out 0.6s both;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.splash-text-swift { color: #CC19F4; }
+.splash-text-amp { color: rgba(255,255,255,0.3); font-weight: 300; }
+.splash-text-games { color: #ffffff; }
+
+.splash-tagline {
+  position: relative;
+  z-index: 1;
+  margin-top: 8px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  animation: fadeIn 0.5s ease-out 1s both;
+}
+
+.splash-loader {
+  position: relative;
+  z-index: 1;
+  margin-top: 40px;
+  width: 180px;
+  height: 2px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  animation: fadeIn 0.3s ease-out 1.2s both;
+}
+
+.splash-loader-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand), #e040fb);
+  border-radius: 2px;
+  animation: splashLoad 1.5s ease-in-out 1.2s both;
+}
+
+/* ============================================================
+   LOGIN PAGE
+   ============================================================ */
+
+.login-page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f0f14 0%, #1a1a2e 50%, #0f0f14 100%);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-orb {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.login-orb-top {
+  top: -20%;
+  right: -10%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(204,25,244,0.08) 0%, transparent 70%);
+}
+.login-orb-bottom {
+  bottom: -20%;
+  left: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(204,25,244,0.05) 0%, transparent 70%);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 20px;
+  padding: 48px 40px;
+  position: relative;
+}
+
+.login-error {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  color: #fca5a5;
+  font-size: 13px;
+  text-align: center;
+}
+
+.login-label {
+  display: block;
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.login-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: white;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+.login-input:focus {
+  border-color: #CC19F4;
+  box-shadow: 0 0 0 3px rgba(204,25,244,0.15);
+}
+.login-input::placeholder {
+  color: rgba(255,255,255,0.2);
+}
+
+.remember-me-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
+}
+.remember-me-label:hover {
+  color: rgba(255,255,255,0.7);
+}
+
+.remember-me-checkbox {
+  display: none;
+}
+
+.remember-me-custom {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1.5px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.remember-me-checkbox:checked + .remember-me-custom {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+.remember-me-checkbox:checked + .remember-me-custom::after {
+  content: '✓';
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.login-submit-btn {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, #CC19F4 0%, #a014c3 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px rgba(204,25,244,0.25);
+  position: relative;
+  overflow: hidden;
+}
+.login-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(204,25,244,0.35);
+}
+.login-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+.login-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-btn-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.login-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* ============================================================
+   WELCOME BACK ANIMATION (Dashboard)
+   ============================================================ */
+
+.welcome-greeting {
+  animation: slideDown 0.5s ease-out both;
+}
+
+.welcome-greeting h1 {
+  animation: welcomePulse 2s ease-in-out;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  padding: 20px;
+  animation: slideUp 0.5s ease-out both;
+}
+
+/* ============================================================
+   UTILITY CLASSES
+   ============================================================ */
+
 .card {
   background: #ffffff;
   border: 1px solid var(--border);
@@ -83,6 +498,7 @@ body {
   transition: all 0.2s ease;
   border: none;
   outline: none;
+  white-space: nowrap;
 }
 
 .btn-brand {
@@ -129,6 +545,7 @@ body {
   transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
   font-family: inherit;
+  box-sizing: border-box;
 }
 .input:focus {
   border-color: var(--brand);
@@ -143,7 +560,174 @@ body {
   margin-bottom: 6px;
 }
 
-/* Print Rules */
+/* ============================================================
+   LAYOUT HELPERS
+   ============================================================ */
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-main {
+  flex: 1;
+  overflow: auto;
+  background: var(--surface);
+  padding: 32px 40px;
+}
+
+/* ============================================================
+   SIDEBAR (DESKTOP + MOBILE)
+   ============================================================ */
+
+.sidebar {
+  width: 260px;
+  min-height: 100vh;
+  background-color: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+.mobile-menu-toggle {
+  display: none;
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 1001;
+  background: var(--sidebar-bg);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: white;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.mobile-menu-toggle:hover {
+  background: var(--sidebar-hover);
+}
+
+/* ============================================================
+   INVOICE FORM LAYOUT
+   ============================================================ */
+
+.invoice-form-layout {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.invoice-form-panel {
+  width: 460px;
+  flex-shrink: 0;
+  overflow: auto;
+  padding: 32px 28px;
+  border-right: 1px solid var(--border);
+  background: #fff;
+}
+
+.invoice-preview-panel {
+  flex: 1;
+  overflow: auto;
+  padding: 32px;
+  display: flex;
+  justify-content: center;
+}
+
+.mobile-preview-toggle {
+  display: none;
+}
+
+/* ============================================================
+   INVOICE DETAIL ACTION BAR
+   ============================================================ */
+
+.invoice-action-bar {
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.invoice-action-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  flex: 1;
+}
+
+.invoice-action-bar-right {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ============================================================
+   RESPONSIVE TABLE
+   ============================================================ */
+
+.responsive-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================================
+   SETTINGS GRID
+   ============================================================ */
+
+.settings-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.settings-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* ============================================================
+   USERS TABLE
+   ============================================================ */
+
+.users-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* ============================================================
+   MOBILE VISIBILITY HELPERS
+   ============================================================ */
+
+.hide-on-mobile {
+  display: flex;
+}
+
+/* ============================================================
+   Print Rules
+   ============================================================ */
+
 @media print {
   body {
     background: #ffffff !important;
@@ -152,10 +736,217 @@ body {
   .no-print {
     display: none !important;
   }
+  .sidebar, .mobile-menu-toggle, .sidebar-overlay {
+    display: none !important;
+  }
   .invoice-page {
     box-shadow: none !important;
     margin: 0 !important;
     padding: 15mm !important;
     width: 100% !important;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — TABLET (≤ 1024px)
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .invoice-form-panel {
+    width: 380px;
+  }
+
+  .settings-grid-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .app-main {
+    padding: 24px 20px;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — MOBILE (≤ 768px)
+   ============================================================ */
+
+@media (max-width: 768px) {
+  /* Sidebar becomes overlay drawer */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+  }
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    backdrop-filter: blur(2px);
+  }
+  .sidebar-overlay.sidebar-overlay-visible {
+    display: block;
+    animation: fadeIn 0.2s ease-out both;
+  }
+
+  .mobile-menu-toggle {
+    display: flex;
+  }
+
+  /* Main content gets top padding for hamburger */
+  .app-main {
+    padding: 70px 16px 24px 16px;
+  }
+
+  /* Stats */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  /* Dashboard header */
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  /* Invoice form layout — stacked */
+  .invoice-form-layout {
+    flex-direction: column;
+  }
+
+  .invoice-form-panel {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 70px 16px 24px 16px;
+  }
+
+  .invoice-preview-panel {
+    padding: 16px;
+    overflow-x: auto;
+  }
+
+  .mobile-preview-toggle {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    padding: 10px;
+    margin-bottom: 12px;
+  }
+
+  /* Invoice detail action bar */
+  .invoice-action-bar {
+    flex-direction: column;
+    padding: 70px 16px 16px 16px;
+    gap: 12px;
+  }
+
+  .invoice-action-bar-left {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .invoice-action-bar-right {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  /* Settings page */
+  .settings-grid-2,
+  .settings-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Users page */
+  .users-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Login page */
+  .login-card {
+    padding: 36px 24px;
+    border-radius: 16px;
+  }
+
+  /* Tables — allow horizontal scroll */
+  .responsive-table-wrapper {
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+
+  .responsive-table-wrapper table {
+    min-width: 600px;
+  }
+
+  /* Card padding reduction */
+  .card {
+    padding: 16px;
+  }
+
+  /* Hide preview by default on mobile */
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  /* Invoice detail preview */
+  .invoice-detail-preview {
+    padding: 16px !important;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — SMALL PHONES (≤ 480px)
+   ============================================================ */
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .app-main {
+    padding: 66px 12px 20px 12px;
+  }
+
+  .invoice-form-panel {
+    padding: 66px 12px 20px 12px;
+  }
+
+  .invoice-action-bar {
+    padding: 66px 12px 12px 12px;
+  }
+
+  .login-page-wrapper {
+    padding: 12px;
+  }
+
+  .login-card {
+    padding: 28px 18px;
+  }
+
+  .splash-text {
+    font-size: 22px;
+  }
+
+  .splash-logo {
+    height: 72px;
   }
 }

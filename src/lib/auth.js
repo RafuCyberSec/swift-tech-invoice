@@ -7,12 +7,14 @@ import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.AUTH_SECRET || "swifttech-invoice-generator-secret-key-2026-fallback-super-secure",
   providers: [
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        rememberMe: { label: 'Remember Me', type: 'text' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -34,18 +36,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
           email: user.email,
           role: user.role,
+          rememberMe: credentials.rememberMe === 'true',
         };
       },
     }),
   ],
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days max
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        // Set expiry based on remember me preference
+        if (user.rememberMe) {
+          token.maxAge = 30 * 24 * 60 * 60; // 30 days
+        } else {
+          token.maxAge = 24 * 60 * 60; // 1 day
+        }
       }
       return token;
     },

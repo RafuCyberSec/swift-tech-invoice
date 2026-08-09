@@ -67,9 +67,9 @@ export default function SettingsPage() {
 
   if (!settings) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <div className="app-layout">
         <Sidebar />
-        <main style={{ flex: 1, padding: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <main className="app-main" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ color: 'var(--muted)' }}>Loading settings...</div>
         </main>
       </div>
@@ -77,9 +77,9 @@ export default function SettingsPage() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="app-layout">
       <Sidebar />
-      <main style={{ flex: 1, padding: '40px', background: 'var(--surface)', overflow: 'auto' }}>
+      <main className="app-main">
         <div style={{ maxWidth: '720px' }}>
           {/* Header */}
           <div style={{ marginBottom: '32px' }}>
@@ -119,7 +119,7 @@ export default function SettingsPage() {
               {/* Logo upload */}
               <div style={{ marginBottom: '20px' }}>
                 <label className="label">Company Logo</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                   <img
                     src={logoPreview || settings.logo_path || '/logo.svg'}
                     alt="Logo"
@@ -164,7 +164,7 @@ export default function SettingsPage() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div className="settings-grid-2">
                 <div>
                   <label className="label">Website</label>
                   <input
@@ -200,7 +200,7 @@ export default function SettingsPage() {
                 Branding & Currency
               </h2>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div className="settings-grid-3">
                 <div>
                   <label className="label">Brand Color</label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -246,7 +246,7 @@ export default function SettingsPage() {
                 Invoice Configuration
               </h2>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div className="settings-grid-2">
                 <div>
                   <label className="label">Invoice Prefix</label>
                   <input

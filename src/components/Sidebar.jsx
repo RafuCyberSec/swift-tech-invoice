@@ -3,6 +3,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 const navItems = [
   {
@@ -52,187 +53,222 @@ export default function Sidebar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const userRole = session?.user?.role || 'staff';
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const visibleItems = navItems.filter(item => item.roles.includes(userRole));
 
+  // Close sidebar on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  // Prevent body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileOpen]);
+
   return (
-    <aside
-      className="no-print"
-      style={{
-        width: '260px',
-        minHeight: '100vh',
-        backgroundColor: 'var(--sidebar-bg)',
-        display: 'flex',
-        flexDirection: 'column',
-        flexShrink: 0,
-      }}
-    >
-      {/* Logo / Brand */}
-      <div
-        style={{
-          padding: '24px 20px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-        }}
+    <>
+      {/* Mobile hamburger button */}
+      <button
+        className="mobile-menu-toggle no-print"
+        onClick={() => setMobileOpen(!mobileOpen)}
+        aria-label="Toggle menu"
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img src="/logo.svg" alt="Logo" style={{ height: '36px', width: 'auto' }} />
-          <div>
-            <div
-              style={{
-                color: '#CC19F4',
-                fontWeight: 700,
-                fontSize: '15px',
-                lineHeight: '1.2',
-              }}
-            >
-              Swift Tech
-            </div>
-            <div
-              style={{
-                color: 'var(--sidebar-text)',
-                fontSize: '11px',
-                opacity: 0.7,
-              }}
-            >
-              Invoice Manager
-            </div>
-          </div>
-        </div>
-      </div>
+        {mobileOpen ? (
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        ) : (
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        )}
+      </button>
 
-      {/* Navigation */}
-      <nav style={{ flex: 1, padding: '16px 12px' }}>
-        <div style={{ marginBottom: '8px', padding: '0 8px' }}>
-          <span
-            style={{
-              fontSize: '10px',
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              color: 'rgba(161, 161, 170, 0.5)',
-            }}
-          >
-            Menu
-          </span>
-        </div>
-        {visibleItems.map(item => {
-          const isActive =
-            item.href === '/'
-              ? pathname === '/'
-              : pathname.startsWith(item.href);
+      {/* Mobile overlay */}
+      <div
+        className={`sidebar-overlay ${mobileOpen ? 'sidebar-overlay-visible' : ''}`}
+        onClick={() => setMobileOpen(false)}
+      />
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '10px 12px',
-                borderRadius: '8px',
-                marginBottom: '4px',
-                fontSize: '14px',
-                fontWeight: isActive ? 600 : 400,
-                color: isActive ? '#ffffff' : 'var(--sidebar-text)',
-                background: isActive
-                  ? 'linear-gradient(135deg, rgba(204, 25, 244, 0.2), rgba(204, 25, 244, 0.08))'
-                  : 'transparent',
-                textDecoration: 'none',
-                transition: 'all 0.2s ease',
-                position: 'relative',
-              }}
-              onMouseEnter={e => {
-                if (!isActive) {
-                  e.currentTarget.style.background = 'var(--sidebar-hover)';
-                  e.currentTarget.style.color = '#ffffff';
-                }
-              }}
-              onMouseLeave={e => {
-                if (!isActive) {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = 'var(--sidebar-text)';
-                }
-              }}
-            >
-              {isActive && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: '0',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: '3px',
-                    height: '20px',
-                    background: '#CC19F4',
-                    borderRadius: '0 3px 3px 0',
-                  }}
-                />
-              )}
-              {item.icon}
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* User info + logout */}
-      {session?.user && (
+      {/* Sidebar */}
+      <aside
+        className={`sidebar no-print ${mobileOpen ? 'sidebar-open' : ''}`}
+      >
+        {/* Logo / Brand */}
         <div
           style={{
-            padding: '16px 20px',
-            borderTop: '1px solid rgba(255,255,255,0.06)',
+            padding: '24px 20px',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img src="/logo.svg" alt="Logo" style={{ height: '36px', width: 'auto' }} />
             <div>
-              <div style={{ color: '#fff', fontSize: '13px', fontWeight: 500 }}>
-                {session.user.name}
+              <div
+                style={{
+                  color: '#CC19F4',
+                  fontWeight: 700,
+                  fontSize: '15px',
+                  lineHeight: '1.2',
+                }}
+              >
+                Swift Tech
               </div>
               <div
                 style={{
                   color: 'var(--sidebar-text)',
                   fontSize: '11px',
-                  opacity: 0.6,
+                  opacity: 0.7,
                 }}
               >
-                {session.user.role === 'admin' ? 'Administrator' : 'Staff'}
+                Invoice Manager
               </div>
             </div>
-            <button
-              onClick={() => signOut({ callbackUrl: '/login' })}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--sidebar-text)',
-                cursor: 'pointer',
-                padding: '6px',
-                borderRadius: '6px',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.color = '#ef4444';
-                e.currentTarget.style.background = 'rgba(239,68,68,0.1)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.color = 'var(--sidebar-text)';
-                e.currentTarget.style.background = 'transparent';
-              }}
-              title="Sign out"
-            >
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
           </div>
         </div>
-      )}
-    </aside>
+
+        {/* Navigation */}
+        <nav style={{ flex: 1, padding: '16px 12px' }}>
+          <div style={{ marginBottom: '8px', padding: '0 8px' }}>
+            <span
+              style={{
+                fontSize: '10px',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: 'rgba(161, 161, 170, 0.5)',
+              }}
+            >
+              Menu
+            </span>
+          </div>
+          {visibleItems.map(item => {
+            const isActive =
+              item.href === '/'
+                ? pathname === '/'
+                : pathname.startsWith(item.href);
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  marginBottom: '4px',
+                  fontSize: '14px',
+                  fontWeight: isActive ? 600 : 400,
+                  color: isActive ? '#ffffff' : 'var(--sidebar-text)',
+                  background: isActive
+                    ? 'linear-gradient(135deg, rgba(204, 25, 244, 0.2), rgba(204, 25, 244, 0.08))'
+                    : 'transparent',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s ease',
+                  position: 'relative',
+                }}
+                onMouseEnter={e => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'var(--sidebar-hover)';
+                    e.currentTarget.style.color = '#ffffff';
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = 'var(--sidebar-text)';
+                  }
+                }}
+              >
+                {isActive && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '0',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '3px',
+                      height: '20px',
+                      background: '#CC19F4',
+                      borderRadius: '0 3px 3px 0',
+                    }}
+                  />
+                )}
+                {item.icon}
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* User info + logout */}
+        {session?.user && (
+          <div
+            style={{
+              padding: '16px 20px',
+              borderTop: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <div style={{ color: '#fff', fontSize: '13px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {session.user.name}
+                </div>
+                <div
+                  style={{
+                    color: 'var(--sidebar-text)',
+                    fontSize: '11px',
+                    opacity: 0.6,
+                  }}
+                >
+                  {session.user.role === 'admin' ? 'Administrator' : 'Staff'}
+                </div>
+              </div>
+              <button
+                onClick={() => signOut({ callbackUrl: '/login' })}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--sidebar-text)',
+                  cursor: 'pointer',
+                  padding: '6px',
+                  borderRadius: '6px',
+                  transition: 'all 0.2s',
+                  flexShrink: 0,
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.color = '#ef4444';
+                  e.currentTarget.style.background = 'rgba(239,68,68,0.1)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.color = 'var(--sidebar-text)';
+                  e.currentTarget.style.background = 'transparent';
+                }}
+                title="Sign out"
+              >
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+      </aside>
+    </>
   );
 }

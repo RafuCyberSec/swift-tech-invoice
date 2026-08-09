@@ -8,16 +8,35 @@ const DB_DIR = isVercel
   : path.join(process.cwd(), 'database');
 const DB_PATH = path.join(DB_DIR, 'invoices.db');
 
+// Pre-computed bcrypt hash for admin password: RafuCyberSec@2001
+const ADMIN_EMAIL = 'rafay@swifttechngames.com';
+const ADMIN_NAME = 'Rafay';
+const ADMIN_PASSWORD_HASH = '$2b$12$9U4O4etstff9iFJdP4Sxku4bqK5QH.MnXFpPob6dyawvfOZUe4XoO';
+
+const DEFAULT_NOTES = 'Thank you for your purchase at Swift Tech & Games.';
+const DEFAULT_TERMS = 'Warranty void if burnt or broken. Original box, stickers, accessories, manuals and invoice are required for warranty.\nWarranty claims can take between 20 to 60 days.';
+
 let _db = null;
 let _SQL = null;
+let _dbPromise = null; // Promise to prevent async race conditions during init
 
 /**
  * Get or create the database connection (singleton)
  * sql.js is a pure-JS SQLite — no native compilation needed
  */
-export async function getDb() {
-  if (_db) return _db;
+export function getDb() {
+  if (_db) return Promise.resolve(_db);
+  
+  if (!_dbPromise) {
+    _dbPromise = initializeDb().catch(err => {
+      _dbPromise = null;
+      throw err;
+    });
+  }
+  return _dbPromise;
+}
 
+async function initializeDb() {
   // Ensure the database directory exists
   if (!fs.existsSync(DB_DIR)) {
     fs.mkdirSync(DB_DIR, { recursive: true });
@@ -41,6 +60,13 @@ export async function getDb() {
   // Initialize schema
   initializeSchema(_db);
 
+  // Run migrations for existing databases
+  runMigrations(_db);
+
+  // Seed admin user and settings
+  seedAdminUser(_db);
+  seedSettings(_db);
+
   // Persist
   saveDb();
 
@@ -51,7 +77,10 @@ function saveDb() {
   if (!_db) return;
   const data = _db.export();
   const buffer = Buffer.from(data);
-  fs.writeFileSync(DB_PATH, buffer);
+  // Atomic write to prevent file corruption
+  const tempPath = DB_PATH + '.tmp';
+  fs.writeFileSync(tempPath, buffer);
+  fs.renameSync(tempPath, DB_PATH);
 }
 
 function initializeSchema(db) {
@@ -62,6 +91,7 @@ function initializeSchema(db) {
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'staff' CHECK (role IN ('admin', 'staff')),
+      is_system INTEGER NOT NULL DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     )
@@ -79,6 +109,7 @@ function initializeSchema(db) {
       currency_name TEXT DEFAULT 'PKR',
       logo_path TEXT DEFAULT '/logo.svg',
       invoice_prefix TEXT DEFAULT 'ACC-SINV',
+      default_notes TEXT DEFAULT 'Thank you for your purchase at Swift Tech & Games.',
       default_terms TEXT DEFAULT 'Warranty void if burnt or broken. Original box, stickers, accessories, manuals and invoice are required for warranty.
 Warranty claims can take between 20 to 60 days.',
       next_invoice_number INTEGER DEFAULT 1
@@ -116,12 +147,79 @@ Warranty claims can take between 20 to 60 days.',
   } catch {
     // Indexes may already exist
   }
+}
 
-  // Seed settings row if it doesn't exist
+/**
+ * Run migrations for existing databases that may lack newer columns
+ */
+function runMigrations(db) {
+  // Check if default_notes column exists in settings
+  try {
+    const tableInfo = db.exec("PRAGMA table_info(settings)");
+    if (tableInfo.length > 0) {
+      const columns = tableInfo[0].values.map(row => row[1]);
+      if (!columns.includes('default_notes')) {
+        db.run(`ALTER TABLE settings ADD COLUMN default_notes TEXT DEFAULT '${DEFAULT_NOTES}'`);
+      }
+    }
+  } catch {
+    // Column might already exist
+  }
+
+  // Check if is_system column exists in users
+  try {
+    const tableInfo = db.exec("PRAGMA table_info(users)");
+    if (tableInfo.length > 0) {
+      const columns = tableInfo[0].values.map(row => row[1]);
+      if (!columns.includes('is_system')) {
+        db.run("ALTER TABLE users ADD COLUMN is_system INTEGER NOT NULL DEFAULT 0");
+      }
+    }
+  } catch {
+    // Column might already exist
+  }
+}
+
+/**
+ * Auto-seed the hardcoded admin user if not present
+ */
+function seedAdminUser(db) {
+  const result = db.exec('SELECT id, password_hash FROM users WHERE email = ?', [ADMIN_EMAIL]);
+  if (result.length === 0 || result[0].values.length === 0) {
+    // Admin doesn't exist — create
+    db.run(
+      'INSERT INTO users (name, email, password_hash, role, is_system) VALUES (?, ?, ?, ?, ?)',
+      [ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD_HASH, 'admin', 1]
+    );
+  } else {
+    // Admin exists — ensure password is up to date and is_system is set
+    const userId = result[0].values[0][0];
+    db.run(
+      'UPDATE users SET password_hash = ?, role = ?, is_system = 1 WHERE id = ?',
+      [ADMIN_PASSWORD_HASH, 'admin', userId]
+    );
+  }
+}
+
+/**
+ * Seed settings row if it doesn't exist, ensuring defaults are always populated
+ */
+function seedSettings(db) {
   const result = db.exec('SELECT id FROM settings WHERE id = 1');
   if (result.length === 0 || result[0].values.length === 0) {
-    db.run('INSERT OR IGNORE INTO settings (id) VALUES (1)');
-    saveDb();
+    db.run(`INSERT INTO settings (id, default_notes, default_terms) VALUES (1, ?, ?)`, [DEFAULT_NOTES, DEFAULT_TERMS]);
+  } else {
+    // Ensure default_notes and default_terms are not empty
+    const settings = db.exec('SELECT default_notes, default_terms FROM settings WHERE id = 1');
+    if (settings.length > 0 && settings[0].values.length > 0) {
+      const [notes, terms] = settings[0].values[0];
+      if (!notes) {
+        db.run('UPDATE settings SET default_notes = ? WHERE id = 1', [DEFAULT_NOTES]);
+      }
+      if (!terms) {
+        db.run('UPDATE settings SET default_terms = ? WHERE id = 1', [DEFAULT_TERMS]);
+      }
+    }
   }
 }
 
@@ -158,7 +256,7 @@ export async function getUserByEmail(email) {
 export async function getUserById(id) {
   const db = await getDb();
   const result = db.exec(
-    'SELECT id, name, email, role, created_at, updated_at FROM users WHERE id = ?',
+    'SELECT id, name, email, role, is_system, created_at, updated_at FROM users WHERE id = ?',
     [id]
   );
   return resultToObject(result);
@@ -167,7 +265,7 @@ export async function getUserById(id) {
 export async function getAllUsers() {
   const db = await getDb();
   const result = db.exec(
-    'SELECT id, name, email, role, created_at, updated_at FROM users ORDER BY created_at DESC'
+    'SELECT id, name, email, role, is_system, created_at, updated_at FROM users ORDER BY created_at DESC'
   );
   return resultToObjects(result);
 }
@@ -202,6 +300,11 @@ export async function updateUser(id, data) {
 
 export async function deleteUser(id) {
   const db = await getDb();
+  // Prevent deletion of system admin user
+  const user = resultToObject(db.exec('SELECT is_system FROM users WHERE id = ?', [id]));
+  if (user && user.is_system) {
+    throw new Error('Cannot delete the system administrator account');
+  }
   db.run('DELETE FROM users WHERE id = ?', [id]);
   saveDb();
 }

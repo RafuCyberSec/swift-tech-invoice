@@ -89,12 +89,12 @@ export default function UsersPage() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="app-layout">
       <Sidebar />
-      <main style={{ flex: 1, padding: '40px', background: 'var(--surface)', overflow: 'auto' }}>
+      <main className="app-main">
         <div style={{ maxWidth: '800px' }}>
           {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+          <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
             <div>
               <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--foreground)', marginBottom: '4px' }}>
                 User Management
@@ -126,9 +126,9 @@ export default function UsersPage() {
                 padding: '12px 16px',
                 borderRadius: '10px',
                 marginBottom: '20px',
-                background: message.includes('deleted') || message.includes('failed') || message.includes('error')
+                background: message.includes('deleted') || message.includes('failed') || message.includes('error') || message.includes('Cannot')
                   ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)',
-                color: message.includes('deleted') || message.includes('failed') || message.includes('error')
+                color: message.includes('deleted') || message.includes('failed') || message.includes('error') || message.includes('Cannot')
                   ? 'var(--danger)' : 'var(--success)',
                 fontSize: '13px',
               }}
@@ -144,7 +144,7 @@ export default function UsersPage() {
                 {editingUser ? 'Edit User' : 'Add New User'}
               </h2>
               <form onSubmit={handleSubmit}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                <div className="users-grid-2" style={{ marginBottom: '16px' }}>
                   <div>
                     <label className="label">Full Name</label>
                     <input
@@ -165,7 +165,7 @@ export default function UsersPage() {
                     />
                   </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                <div className="users-grid-2" style={{ marginBottom: '20px' }}>
                   <div>
                     <label className="label">
                       Password {editingUser && '(leave blank to keep current)'}
@@ -191,7 +191,7 @@ export default function UsersPage() {
                     </select>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   <button type="submit" className="btn btn-brand" disabled={loading}>
                     {loading ? 'Saving...' : editingUser ? 'Update User' : 'Create User'}
                   </button>
@@ -208,63 +208,84 @@ export default function UsersPage() {
           )}
 
           {/* Users List */}
-          <div className="card">
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  <th style={thStyle}>Name</th>
-                  <th style={thStyle}>Email</th>
-                  <th style={thStyle}>Role</th>
-                  <th style={thStyle}>Created</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={tdStyle}>
-                      <div style={{ fontWeight: 500 }}>{user.name}</div>
-                    </td>
-                    <td style={{ ...tdStyle, color: 'var(--muted)' }}>{user.email}</td>
-                    <td style={tdStyle}>
-                      <span
-                        style={{
-                          padding: '3px 10px',
-                          borderRadius: '20px',
-                          fontSize: '12px',
-                          fontWeight: 500,
-                          background: user.role === 'admin' ? 'rgba(204,25,244,0.1)' : 'rgba(107,114,128,0.1)',
-                          color: user.role === 'admin' ? '#CC19F4' : 'var(--muted)',
-                        }}
-                      >
-                        {user.role}
-                      </span>
-                    </td>
-                    <td style={{ ...tdStyle, color: 'var(--muted)', fontSize: '13px' }}>
-                      {user.created_at ? new Date(user.created_at).toLocaleDateString() : ''}
-                    </td>
-                    <td style={{ ...tdStyle, textAlign: 'right' }}>
-                      <button
-                        className="btn btn-ghost btn-sm"
-                        onClick={() => startEdit(user)}
-                        style={{ marginRight: '4px' }}
-                      >
-                        Edit
-                      </button>
-                      {String(user.id) !== String(session?.user?.id) && (
-                        <button
-                          className="btn btn-ghost btn-sm"
-                          onClick={() => handleDelete(user.id)}
-                          style={{ color: 'var(--danger)' }}
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </td>
+          <div className="card" style={{ padding: 0 }}>
+            <div className="responsive-table-wrapper">
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                    <th style={thStyle}>Name</th>
+                    <th style={thStyle}>Email</th>
+                    <th style={thStyle}>Role</th>
+                    <th style={thStyle}>Created</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {users.map((user) => {
+                    const isSystemUser = !!user.is_system;
+                    const isSelf = String(user.id) === String(session?.user?.id);
+
+                    return (
+                      <tr key={user.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={tdStyle}>
+                          <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {user.name}
+                            {isSystemUser && (
+                              <span style={{
+                                fontSize: '10px',
+                                padding: '1px 6px',
+                                borderRadius: '4px',
+                                background: 'rgba(204,25,244,0.08)',
+                                color: '#CC19F4',
+                                fontWeight: 600,
+                              }}>
+                                SYSTEM
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td style={{ ...tdStyle, color: 'var(--muted)' }}>{user.email}</td>
+                        <td style={tdStyle}>
+                          <span
+                            style={{
+                              padding: '3px 10px',
+                              borderRadius: '20px',
+                              fontSize: '12px',
+                              fontWeight: 500,
+                              background: user.role === 'admin' ? 'rgba(204,25,244,0.1)' : 'rgba(107,114,128,0.1)',
+                              color: user.role === 'admin' ? '#CC19F4' : 'var(--muted)',
+                            }}
+                          >
+                            {user.role}
+                          </span>
+                        </td>
+                        <td style={{ ...tdStyle, color: 'var(--muted)', fontSize: '13px' }}>
+                          {user.created_at ? new Date(user.created_at).toLocaleDateString() : ''}
+                        </td>
+                        <td style={{ ...tdStyle, textAlign: 'right' }}>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => startEdit(user)}
+                            style={{ marginRight: '4px' }}
+                          >
+                            Edit
+                          </button>
+                          {!isSelf && !isSystemUser && (
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              onClick={() => handleDelete(user.id)}
+                              style={{ color: 'var(--danger)' }}
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
             {users.length === 0 && (
               <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>
                 No users found
@@ -285,6 +306,7 @@ const thStyle = {
   textTransform: 'uppercase',
   letterSpacing: '0.05em',
   textAlign: 'left',
+  whiteSpace: 'nowrap',
 };
 
 const tdStyle = {

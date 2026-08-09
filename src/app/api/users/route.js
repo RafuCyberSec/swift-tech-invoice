@@ -95,6 +95,9 @@ export async function DELETE(req) {
     await deleteUser(id);
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error.message?.includes('system administrator')) {
+      return NextResponse.json({ error: 'Cannot delete the system administrator account' }, { status: 400 });
+    }
     console.error('Users DELETE error:', error);
     return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
   }

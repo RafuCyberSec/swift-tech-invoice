@@ -1,5 +1,6 @@
 import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
+import SplashScreen from "@/components/SplashScreen";
 
 export const metadata = {
   title: "Swift Tech & Games - Invoice Manager",
@@ -14,7 +15,9 @@ export default function RootLayout({ children }) {
         style={{ fontFamily: "'Open Sans', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif" }}
         suppressHydrationWarning
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <SplashScreen>{children}</SplashScreen>
+        </AuthProvider>
       </body>
     </html>
   );

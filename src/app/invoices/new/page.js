@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import InvoiceTemplate from '@/components/InvoiceTemplate';
@@ -10,6 +10,7 @@ export default function NewInvoicePage() {
   const [settings, setSettings] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -36,16 +37,15 @@ export default function NewInvoicePage() {
       if (res.ok) {
         const data = await res.json();
         setSettings(data);
-        // Set default notes and terms from settings
-        const savedNotes = localStorage.getItem('default_invoice_notes');
+        // Set default notes and terms from API (database defaults)
         setFormData(prev => ({
           ...prev,
-          notes: prev.notes || savedNotes || data.default_notes || '',
+          notes: prev.notes || data.default_notes || '',
           terms: prev.terms || data.default_terms || '',
         }));
       }
     } catch {
-      // Settings API might be admin-only, use defaults
+      // Settings API might be unavailable, use defaults
       setSettings({
         company_name: 'Swift Tech & Games',
         website: 'swifttechngames.com',
@@ -90,9 +90,6 @@ export default function NewInvoicePage() {
   const handleSave = async (status = 'draft') => {
     setSaving(true);
     setMessage('');
-
-    // Save notes to localStorage to persist across new invoices
-    localStorage.setItem('default_invoice_notes', formData.notes);
 
     try {
       const res = await fetch('/api/invoices', {
@@ -144,20 +141,11 @@ export default function NewInvoicePage() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="app-layout">
       <Sidebar />
-      <main style={{ flex: 1, display: 'flex', overflow: 'hidden', background: 'var(--surface)' }}>
+      <main className="invoice-form-layout">
         {/* LEFT: Form Panel */}
-        <div
-          style={{
-            width: '460px',
-            flexShrink: 0,
-            overflow: 'auto',
-            padding: '32px 28px',
-            borderRight: '1px solid var(--border)',
-            background: '#fff',
-          }}
-        >
+        <div className="invoice-form-panel">
           <h1 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '4px' }}>
             New Invoice
           </h1>
@@ -167,6 +155,7 @@ export default function NewInvoicePage() {
 
           {message && (
             <div
+              className="animate-fade-in"
               style={{
                 padding: '10px 14px',
                 borderRadius: '8px',
@@ -216,7 +205,7 @@ export default function NewInvoicePage() {
           {/* Dates */}
           <div style={{ marginBottom: '24px' }}>
             <h3 style={sectionHeaderStyle}>Dates</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div className="settings-grid-2">
               <div>
                 <label className="label">Invoice Date</label>
                 <input
@@ -297,7 +286,7 @@ export default function NewInvoicePage() {
                     style={{ fontSize: '13px', padding: '8px 12px' }}
                   />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+                <div className="settings-grid-2" style={{ marginBottom: '8px' }}>
                   <div>
                     <label className="label">Warranty</label>
                     <input
@@ -319,7 +308,7 @@ export default function NewInvoicePage() {
                     />
                   </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                <div className="settings-grid-3">
                   <div>
                     <label className="label">Qty</label>
                     <input
@@ -360,7 +349,7 @@ export default function NewInvoicePage() {
           {/* Shipping & Discount */}
           <div style={{ marginBottom: '24px' }}>
             <h3 style={sectionHeaderStyle}>Charges & Discounts</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div className="settings-grid-2">
               <div>
                 <label className="label">Shipping Charges</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -430,6 +419,18 @@ export default function NewInvoicePage() {
             </div>
           </div>
 
+          {/* Mobile preview toggle */}
+          <div className="mobile-preview-toggle" style={{ marginBottom: '12px' }}>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => setShowPreview(!showPreview)}
+              style={{ width: '100%' }}
+            >
+              {showPreview ? '✕ Hide Preview' : '👁 Show Preview'}
+            </button>
+          </div>
+
           {/* Save Buttons */}
           <div style={{ display: 'flex', gap: '12px', marginBottom: '40px' }}>
             <button
@@ -452,15 +453,7 @@ export default function NewInvoicePage() {
         </div>
 
         {/* RIGHT: Live Preview */}
-        <div
-          style={{
-            flex: 1,
-            overflow: 'auto',
-            padding: '32px',
-            display: 'flex',
-            justifyContent: 'center',
-          }}
-        >
+        <div className={`invoice-preview-panel ${showPreview ? '' : 'hide-on-mobile'}`}>
           <div style={{ transformOrigin: 'top center' }}>
             <div
               style={{

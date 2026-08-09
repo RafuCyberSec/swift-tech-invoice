@@ -14,11 +14,21 @@ export default function DashboardPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.search.includes('error=access_denied')) {
       setAccessDenied(true);
     }
+    // Show welcome animation if returning user in this session
+    const hasVisited = sessionStorage.getItem('dashboardVisited');
+    if (hasVisited) {
+      setShowWelcome(true);
+      // Auto-hide welcome after 3s
+      const t = setTimeout(() => setShowWelcome(false), 3000);
+      return () => clearTimeout(t);
+    }
+    sessionStorage.setItem('dashboardVisited', 'true');
   }, []);
 
   useEffect(() => {
@@ -72,9 +82,36 @@ export default function DashboardPage() {
   const finalCount = invoices.filter(i => i.status === 'final').length;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="app-layout">
       <Sidebar />
-      <main style={{ flex: 1, overflow: 'auto', background: 'var(--surface)', padding: '32px 40px' }}>
+      <main className="app-main">
+        {/* Welcome back animation */}
+        {showWelcome && session?.user && (
+          <div
+            className="animate-slide-down"
+            style={{
+              padding: '16px 20px',
+              borderRadius: '12px',
+              marginBottom: '20px',
+              background: 'linear-gradient(135deg, rgba(204,25,244,0.08) 0%, rgba(204,25,244,0.03) 100%)',
+              border: '1px solid rgba(204,25,244,0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+            }}
+          >
+            <span style={{ fontSize: '24px' }}>👋</span>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: '15px', color: 'var(--foreground)' }}>
+                Welcome back, {session.user.name}!
+              </div>
+              <div style={{ fontSize: '13px', color: 'var(--muted)' }}>
+                Great to see you again. You have {draftCount} draft{draftCount !== 1 ? 's' : ''} pending.
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Access denied banner */}
         {accessDenied && (
           <div
@@ -89,13 +126,13 @@ export default function DashboardPage() {
               border: '1px solid rgba(239,68,68,0.2)',
             }}
           >
-            Access denied. You don't have permission to access that page.
+            Access denied. You don&apos;t have permission to access that page.
           </div>
         )}
 
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
-          <div>
+        <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
+          <div className="welcome-greeting">
             <h1 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '4px' }}>
               Dashboard
             </h1>
@@ -112,8 +149,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
-          <div className="card animate-fade-in" style={{ padding: '20px' }}>
+        <div className="stats-grid">
+          <div className="card stat-card animate-fade-in">
             <div style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
               Total Invoices
             </div>
@@ -121,7 +158,7 @@ export default function DashboardPage() {
               {totalInvoices}
             </div>
           </div>
-          <div className="card animate-fade-in" style={{ padding: '20px', animationDelay: '0.05s' }}>
+          <div className="card stat-card animate-fade-in" style={{ animationDelay: '0.05s' }}>
             <div style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
               Total Revenue
             </div>
@@ -129,7 +166,7 @@ export default function DashboardPage() {
               {formatCurrency(totalRevenue)}
             </div>
           </div>
-          <div className="card animate-fade-in" style={{ padding: '20px', animationDelay: '0.1s' }}>
+          <div className="card stat-card animate-fade-in" style={{ animationDelay: '0.1s' }}>
             <div style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
               Finalized
             </div>
@@ -137,7 +174,7 @@ export default function DashboardPage() {
               {finalCount}
             </div>
           </div>
-          <div className="card animate-fade-in" style={{ padding: '20px', animationDelay: '0.15s' }}>
+          <div className="card stat-card animate-fade-in" style={{ animationDelay: '0.15s' }}>
             <div style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
               Drafts
             </div>
@@ -149,22 +186,22 @@ export default function DashboardPage() {
 
         {/* Search */}
         <div className="card" style={{ padding: '0' }}>
-          <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <h2 style={{ fontSize: '16px', fontWeight: 600 }}>All Invoices</h2>
-            <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px' }}>
+            <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px', flex: '1 1 auto', maxWidth: '360px', minWidth: '200px' }}>
               <input
                 className="input"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by customer or invoice #"
-                style={{ width: '280px', padding: '8px 14px', fontSize: '13px' }}
+                style={{ flex: 1, padding: '8px 14px', fontSize: '13px' }}
               />
               <button type="submit" className="btn btn-outline btn-sm">Search</button>
             </form>
           </div>
 
           {/* Table */}
-          <div style={{ overflow: 'auto' }}>
+          <div className="responsive-table-wrapper">
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)' }}>
@@ -184,9 +221,6 @@ export default function DashboardPage() {
                   const shipping = inv.shipping_free ? 0 : Number(inv.shipping_charges) || 0;
                   const grandTotal = subtotal + shipping - (Number(inv.discount_amount) || 0);
 
-                  const canEdit =
-                    session?.user?.role === 'admin' ||
-                    String(inv.created_by) === String(session?.user?.id);
                   const canDelete =
                     session?.user?.role === 'admin' ||
                     (String(inv.created_by) === String(session?.user?.id) && inv.status === 'draft');

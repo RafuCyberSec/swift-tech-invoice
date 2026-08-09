@@ -107,9 +107,9 @@ export default function InvoiceDetailPage({ params }) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <div className="app-layout">
         <Sidebar />
-        <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <main className="app-main" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ color: 'var(--muted)' }}>Loading invoice...</div>
         </main>
       </div>
@@ -118,9 +118,9 @@ export default function InvoiceDetailPage({ params }) {
 
   if (error || !invoice) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <div className="app-layout">
         <Sidebar />
-        <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <main className="app-main" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>{error || 'Invoice not found'}</div>
             <button className="btn btn-outline" onClick={() => router.push('/')}>Back to Dashboard</button>
@@ -129,10 +129,6 @@ export default function InvoiceDetailPage({ params }) {
       </div>
     );
   }
-
-  const canEdit =
-    session?.user?.role === 'admin' ||
-    String(invoice.created_by) === String(session?.user?.id);
 
   const canDelete =
     session?.user?.role === 'admin' ||
@@ -154,28 +150,18 @@ export default function InvoiceDetailPage({ params }) {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="app-layout">
       <Sidebar />
       <main style={{ flex: 1, overflow: 'auto', background: 'var(--surface)' }}>
         {/* Action bar */}
-        <div
-          className="no-print"
-          style={{
-            padding: '16px 32px',
-            borderBottom: '1px solid var(--border)',
-            background: '#fff',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div className="invoice-action-bar no-print">
+          <div className="invoice-action-bar-left">
             <button className="btn btn-ghost" onClick={() => router.push('/')}>
               ← Back
             </button>
-            <div>
-              <h2 style={{ fontSize: '16px', fontWeight: 600 }}>{invoice.invoice_number}</h2>
-              <div style={{ fontSize: '12px', color: 'var(--muted)' }}>
+            <div style={{ minWidth: 0 }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{invoice.invoice_number}</h2>
+              <div style={{ fontSize: '12px', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {invoice.customer_name} • Created by {invoice.creator_name}
               </div>
             </div>
@@ -187,12 +173,13 @@ export default function InvoiceDetailPage({ params }) {
                 fontWeight: 500,
                 background: invoice.status === 'final' ? 'rgba(34,197,94,0.1)' : 'rgba(245,158,11,0.1)',
                 color: invoice.status === 'final' ? 'var(--success)' : 'var(--warning)',
+                flexShrink: 0,
               }}
             >
               {invoice.status}
             </span>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="invoice-action-bar-right">
             <a
               href={`/api/pdf/${id}`}
               target="_blank"
@@ -200,7 +187,7 @@ export default function InvoiceDetailPage({ params }) {
               className="btn btn-brand btn-sm"
               style={{ textDecoration: 'none' }}
             >
-              📥 Download PDF
+              📥 PDF
             </a>
             <button className="btn btn-outline btn-sm" onClick={handlePrint}>
               🖨 Print
@@ -222,7 +209,9 @@ export default function InvoiceDetailPage({ params }) {
             padding: '40px',
             display: 'flex',
             justifyContent: 'center',
+            overflowX: 'auto',
           }}
+          className="invoice-detail-preview"
         >
           <div
             style={{

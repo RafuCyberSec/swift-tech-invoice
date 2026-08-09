@@ -8,6 +8,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
@@ -16,6 +17,13 @@ export default function LoginPage() {
     if (typeof window !== 'undefined' && window.location.search.includes('error=access_denied')) {
       setAccessDenied(true);
     }
+    // Restore remember me preference
+    const saved = localStorage.getItem('rememberMe');
+    if (saved === 'true') {
+      setRememberMe(true);
+      const savedEmail = localStorage.getItem('rememberedEmail');
+      if (savedEmail) setEmail(savedEmail);
+    }
   }, []);
 
   const handleSubmit = async (e) => {
@@ -23,10 +31,20 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
+    // Save remember me preference
+    if (rememberMe) {
+      localStorage.setItem('rememberMe', 'true');
+      localStorage.setItem('rememberedEmail', email);
+    } else {
+      localStorage.removeItem('rememberMe');
+      localStorage.removeItem('rememberedEmail');
+    }
+
     try {
       const result = await signIn('credentials', {
         email,
         password,
+        rememberMe: String(rememberMe),
         redirect: false,
       });
 
@@ -44,55 +62,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #0f0f14 0%, #1a1a2e 50%, #0f0f14 100%)',
-        padding: '20px',
-      }}
-    >
+    <div className="login-page-wrapper">
       {/* Decorative background orbs */}
-      <div
-        style={{
-          position: 'fixed',
-          top: '-20%',
-          right: '-10%',
-          width: '500px',
-          height: '500px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(204,25,244,0.08) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }}
-      />
-      <div
-        style={{
-          position: 'fixed',
-          bottom: '-20%',
-          left: '-10%',
-          width: '600px',
-          height: '600px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(204,25,244,0.05) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }}
-      />
+      <div className="login-orb login-orb-top" />
+      <div className="login-orb login-orb-bottom" />
 
-      <div
-        className="animate-fade-in"
-        style={{
-          width: '100%',
-          maxWidth: '420px',
-          background: 'rgba(255,255,255,0.03)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.06)',
-          borderRadius: '20px',
-          padding: '48px 40px',
-          position: 'relative',
-        }}
-      >
+      <div className="login-card animate-scale-in">
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <img
@@ -117,18 +92,7 @@ export default function LoginPage() {
 
         {/* Error message */}
         {(error || accessDenied) && (
-          <div
-            style={{
-              background: 'rgba(239,68,68,0.1)',
-              border: '1px solid rgba(239,68,68,0.2)',
-              borderRadius: '10px',
-              padding: '12px 16px',
-              marginBottom: '20px',
-              color: '#fca5a5',
-              fontSize: '13px',
-              textAlign: 'center',
-            }}
-          >
+          <div className="login-error animate-fade-in">
             {error || 'Access denied. Admin permissions required.'}
           </div>
         )}
@@ -136,113 +100,59 @@ export default function LoginPage() {
         {/* Form */}
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '18px' }}>
-            <label
-              style={{
-                display: 'block',
-                color: 'rgba(255,255,255,0.5)',
-                fontSize: '12px',
-                fontWeight: 500,
-                marginBottom: '6px',
-              }}
-            >
+            <label className="login-label">
               Email Address
             </label>
             <input
+              id="login-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="you@swifttechngames.com"
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '10px',
-                color: 'white',
-                fontSize: '14px',
-                outline: 'none',
-                transition: 'border-color 0.2s',
-                boxSizing: 'border-box',
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#CC19F4';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = 'rgba(255,255,255,0.1)';
-              }}
+              className="login-input"
             />
           </div>
 
-          <div style={{ marginBottom: '28px' }}>
-            <label
-              style={{
-                display: 'block',
-                color: 'rgba(255,255,255,0.5)',
-                fontSize: '12px',
-                fontWeight: 500,
-                marginBottom: '6px',
-              }}
-            >
+          <div style={{ marginBottom: '16px' }}>
+            <label className="login-label">
               Password
             </label>
             <input
+              id="login-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               placeholder="••••••••"
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '10px',
-                color: 'white',
-                fontSize: '14px',
-                outline: 'none',
-                transition: 'border-color 0.2s',
-                boxSizing: 'border-box',
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#CC19F4';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = 'rgba(255,255,255,0.1)';
-              }}
+              className="login-input"
             />
           </div>
 
+          {/* Remember Me */}
+          <div style={{ marginBottom: '24px' }}>
+            <label className="remember-me-label">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="remember-me-checkbox"
+              />
+              <span className="remember-me-custom" />
+              Remember me for 30 days
+            </label>
+          </div>
+
           <button
+            id="login-submit"
             type="submit"
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '13px',
-              background: loading
-                ? 'rgba(204,25,244,0.5)'
-                : 'linear-gradient(135deg, #CC19F4 0%, #a014c3 100%)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '10px',
-              fontSize: '15px',
-              fontWeight: 600,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'all 0.2s',
-              boxShadow: '0 4px 16px rgba(204,25,244,0.25)',
-            }}
-            onMouseEnter={(e) => {
-              if (!loading) {
-                e.target.style.transform = 'translateY(-1px)';
-                e.target.style.boxShadow = '0 6px 24px rgba(204,25,244,0.35)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 4px 16px rgba(204,25,244,0.25)';
-            }}
+            className="login-submit-btn"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            <span className="login-btn-content">
+              {loading && <span className="login-spinner" />}
+              {loading ? 'Signing in...' : 'Sign In'}
+            </span>
           </button>
         </form>
       </div>
