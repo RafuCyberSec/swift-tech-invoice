@@ -1,26 +1,32 @@
 # Swift Tech Invoice Manager
 
-Welcome to the official Swift Tech & Games Invoice Manager. We built this to be lightning fast, beautifully responsive, and incredibly easy to plug right into our SaaS ecosystem.
+Welcome to the official Swift Tech & Games Invoice Manager. 
 
-If you hate bloated software, you'll love this. It runs entirely on Next.js with a snappy local SQLite database, meaning it's lightweight, completely secure, and requires zero messy cloud configuration to get going.
+We built this application with a single goal in mind: to create the fastest, most stunning, and completely frictionless invoicing experience possible. This isn't just another boring utility app—it's a premium piece of software designed to look incredible while getting out of your way.
 
-## What makes it special?
+## Why it stands out
 
-* **No lag, no wait.** It boots instantly. The database runs completely locally and dumps to a single `.db` file.
-* **Pixel-perfect A4 printing.** When you hit print, you get a gorgeous, perfectly scaled A4 invoice that looks identical on screen and on paper.
-* **Fluid mobile design.** Generate invoices from your phone without fighting the layout. The UI actively watches your screen size and scales the live preview so nothing ever gets cut off.
-* **Plug and play.** It's built to slide right into the Swift Tech SaaS suite. 
-* **Built-in authentication.** Secure admin accounts, session persistence, and instant login out of the box.
+**Instant Everything**
+There is no loading screen. There is no cloud-sync delay. Powered by an ultra-optimized local SQLite engine, the entire application boots instantly and saves your data the millisecond you hit the button.
 
+**Pixel-Perfect Printing**
+What you see on the screen is exactly what comes out of the printer. The live preview engine perfectly maps your digital inputs into a beautiful, print-ready A4 document in real-time. 
 
+**Flawless on Mobile**
+We hate it when web apps break on a phone screen. We custom-built a dynamic scaling engine that actively measures your device width and perfectly frames the invoice preview, whether you are on a massive desktop monitor or a tiny iPhone. Zero clipping, zero scrolling issues.
 
-## Tech Stack
+**Premium Aesthetics**
+We completely ditched bulky CSS frameworks. Every single pixel, animation, and layout was handcrafted using vanilla CSS to match the sleek, modern branding of Swift Tech & Games. 
 
-We kept it modern and clean:
-* **Next.js 16** for the framework and API routing.
-* **NextAuth** handling the security and session cookies.
-* **SQL.js** managing the local database.
-* **Puppeteer** doing the heavy lifting for perfectly rendered PDF generation.
-* **Vanilla CSS** because frameworks like Tailwind sometimes just get in the way of building a truly custom, beautiful interface.
+## Administration
 
-Enjoy generating invoices that actually look good!
+Because this is designed to be deployed as part of your SaaS ecosystem, security is fully handled through your server's environment variables. 
+
+To take ownership of the application on your server (like Vercel), simply add these two environment variables to your project settings:
+
+`ADMIN_EMAIL` (Set this to your login email)
+`ADMIN_PASSWORD` (Set this to your preferred plain-text password)
+
+The system is smart enough to automatically encrypt and securely hash your password the very first time the server boots up. No manual hashing, no headaches. Just deploy and log in.
+
+Enjoy your new invoice engine!

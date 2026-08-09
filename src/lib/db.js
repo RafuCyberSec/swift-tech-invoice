@@ -1,6 +1,7 @@
 import initSqlJs from 'sql.js';
 import path from 'path';
 import fs from 'fs';
+import bcrypt from 'bcryptjs';
 
 const isVercel = process.env.VERCEL === '1' || process.env.VERCEL;
 const DB_DIR = isVercel 
@@ -11,7 +12,6 @@ const DB_PATH = path.join(DB_DIR, 'invoices.db');
 // Admin credentials are now securely managed via environment variables for SaaS deployment
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'rafay@swifttechngames.com';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'System Admin';
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '$2b$12$9U4O4etstff9iFJdP4Sxku4bqK5QH.MnXFpPob6dyawvfOZUe4XoO';
 
 const DEFAULT_NOTES = 'Thank you for your purchase at Swift Tech & Games.';
 const DEFAULT_TERMS = 'Warranty void if burnt or broken. Original box, stickers, accessories, manuals and invoice are required for warranty.\nWarranty claims can take between 20 to 60 days.';
@@ -64,7 +64,7 @@ async function initializeDb() {
   runMigrations(_db);
 
   // Seed admin user and settings
-  seedAdminUser(_db);
+  await seedAdminUser(_db);
   seedSettings(_db);
 
   // Persist
@@ -183,20 +183,28 @@ function runMigrations(db) {
 /**
  * Auto-seed the hardcoded admin user if not present
  */
-function seedAdminUser(db) {
+async function seedAdminUser(db) {
+  // Use plain text password from environment variable if provided, otherwise fallback to default safe hash
+  let finalPasswordHash = '$2b$12$9U4O4etstff9iFJdP4Sxku4bqK5QH.MnXFpPob6dyawvfOZUe4XoO';
+  if (process.env.ADMIN_PASSWORD) {
+    finalPasswordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+  } else if (process.env.ADMIN_PASSWORD_HASH) {
+    finalPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+  }
+
   const result = db.exec('SELECT id, password_hash FROM users WHERE email = ?', [ADMIN_EMAIL]);
   if (result.length === 0 || result[0].values.length === 0) {
     // Admin doesn't exist — create
     db.run(
       'INSERT INTO users (name, email, password_hash, role, is_system) VALUES (?, ?, ?, ?, ?)',
-      [ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD_HASH, 'admin', 1]
+      [ADMIN_NAME, ADMIN_EMAIL, finalPasswordHash, 'admin', 1]
     );
   } else {
     // Admin exists — ensure password is up to date and is_system is set
     const userId = result[0].values[0][0];
     db.run(
       'UPDATE users SET password_hash = ?, role = ?, is_system = 1 WHERE id = ?',
-      [ADMIN_PASSWORD_HASH, 'admin', userId]
+      [finalPasswordHash, 'admin', userId]
     );
   }
 }
