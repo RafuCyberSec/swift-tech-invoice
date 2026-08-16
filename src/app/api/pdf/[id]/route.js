@@ -115,7 +115,7 @@ function buildInvoiceHtml(invoice, settings, fontData) {
 
   const {
     company_name = 'Swift Tech & Games',
-    website = 'swifttechngames.com',
+    website = 'www.swifttechngames.com',
     email = 'info@swifttechngames.com',
     phone = '+92 328 0445543',
     brand_color = '#d135f4',

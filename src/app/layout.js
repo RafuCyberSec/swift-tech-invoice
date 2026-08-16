@@ -1,6 +1,7 @@
 import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
 import SplashScreen from "@/components/SplashScreen";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata = {
   title: "Swift Tech & Games - Invoice Manager",
@@ -18,6 +19,7 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <SplashScreen>{children}</SplashScreen>
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   );
