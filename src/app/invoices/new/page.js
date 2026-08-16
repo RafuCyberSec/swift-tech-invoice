@@ -20,7 +20,7 @@ export default function NewInvoicePage() {
     customerPhone: '',
     invoiceDate: new Date().toISOString().split('T')[0],
     dueDate: '',
-    lineItems: [{ itemName: '', warranty: '', serialNumber: '', quantity: 1, unit: 'Unit', rate: 0 }],
+    lineItems: [{ itemName: '', warranty: '', serialNumber: '', quantity: 1, unit: 'Unit', rate: 0, discount: 0 }],
     shippingCharges: 0,
     shippingFree: false,
     discountAmount: 0,
@@ -68,7 +68,7 @@ export default function NewInvoicePage() {
   const addLineItem = () => {
     setFormData(prev => ({
       ...prev,
-      lineItems: [...prev.lineItems, { itemName: '', warranty: '', serialNumber: '', quantity: 1, unit: 'Unit', rate: 0 }],
+      lineItems: [...prev.lineItems, { itemName: '', warranty: '', serialNumber: '', quantity: 1, unit: 'Unit', rate: 0, discount: 0 }],
     }));
   };
 
@@ -309,7 +309,7 @@ export default function NewInvoicePage() {
                     />
                   </div>
                 </div>
-                <div className="settings-grid-3">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
                   <div>
                     <label className="label">Qty</label>
                     <input
@@ -342,58 +342,57 @@ export default function NewInvoicePage() {
                       style={{ fontSize: '13px', padding: '8px 12px' }}
                     />
                   </div>
+                  <div>
+                    <label className="label">Discount</label>
+                    <input
+                      className="input"
+                      type="number"
+                      min="0"
+                      value={item.discount}
+                      onChange={(e) => updateLineItem(index, 'discount', Number(e.target.value))}
+                      style={{ fontSize: '13px', padding: '8px 12px' }}
+                    />
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Shipping & Discount */}
+          {/* Shipping */}
           <div style={{ marginBottom: '24px' }}>
-            <h3 style={sectionHeaderStyle}>Charges & Discounts</h3>
-            <div className="settings-grid-2">
-              <div>
-                <label className="label">Shipping Charges</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <input
-                    className="input"
-                    type="number"
-                    min="0"
-                    value={formData.shippingCharges}
-                    onChange={(e) => updateField('shippingCharges', Number(e.target.value))}
-                    disabled={formData.shippingFree}
-                    style={{ opacity: formData.shippingFree ? 0.5 : 1 }}
-                  />
-                </div>
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    marginTop: '6px',
-                    fontSize: '12px',
-                    color: 'var(--muted)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={formData.shippingFree}
-                    onChange={(e) => updateField('shippingFree', e.target.checked)}
-                    style={{ accentColor: '#CC19F4' }}
-                  />
-                  Free shipping
-                </label>
-              </div>
-              <div>
-                <label className="label">Discount Amount</label>
+            <h3 style={sectionHeaderStyle}>Charges</h3>
+            <div>
+              <label className="label">Shipping Charges</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <input
                   className="input"
                   type="number"
                   min="0"
-                  value={formData.discountAmount}
-                  onChange={(e) => updateField('discountAmount', Number(e.target.value))}
+                  value={formData.shippingCharges}
+                  onChange={(e) => updateField('shippingCharges', Number(e.target.value))}
+                  disabled={formData.shippingFree}
+                  style={{ opacity: formData.shippingFree ? 0.5 : 1 }}
                 />
               </div>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  marginTop: '6px',
+                  fontSize: '12px',
+                  color: 'var(--muted)',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={formData.shippingFree}
+                  onChange={(e) => updateField('shippingFree', e.target.checked)}
+                  style={{ accentColor: '#CC19F4' }}
+                />
+                Free shipping
+              </label>
             </div>
           </div>
 

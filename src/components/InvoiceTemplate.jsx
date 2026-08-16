@@ -11,7 +11,7 @@ import { amountToWords } from '@/lib/numberToWords';
  * Font weight spec:
  *   - Title "Sales Invoice": Semibold (600)
  *   - Customer name, date values: Semibold (600)
- *   - Item Name in table body: Semibold (600)
+ *   - Item Name in table body: Regular (400)
  *   - Notes / Terms headers: Bold (700)
  *   - Grand Total label: Bold (700)
  *   - Company brand name: Bold (700)
@@ -57,29 +57,21 @@ export default function InvoiceTemplate({ invoice = {}, settings = {}, scale = 1
     0
   );
 
-  const discountVal = Number(discountAmount) || 0;
-
-  // Process line items with computed amounts after discount
+  // Process line items with computed amounts after per-item discount
   const processedItems = lineItems.map((item) => {
     const qty = Number(item.quantity) || 0;
     const rate = Number(item.rate) || 0;
     const itemRaw = qty * rate;
-
-    let itemDiscount = Number(item.discount) || 0;
-    if (!itemDiscount && discountVal > 0) {
-      if (lineItems.length === 1) {
-        itemDiscount = discountVal;
-      } else if (totalRawSubtotal > 0) {
-        itemDiscount = (itemRaw / totalRawSubtotal) * discountVal;
-      }
-    }
-
+    const itemDiscount = Number(item.discount) || 0;
     const netAmount = Math.max(0, itemRaw - itemDiscount);
     return {
       ...item,
       computedAmount: netAmount,
+      appliedDiscount: itemDiscount,
     };
   });
+
+  const totalDiscount = processedItems.reduce((sum, item) => sum + item.appliedDiscount, 0);
 
   const computedSubtotal = processedItems.reduce((sum, item) => sum + item.computedAmount, 0);
   const effectiveShipping = shippingFree ? 0 : Number(shippingCharges) || 0;
@@ -293,7 +285,7 @@ export default function InvoiceTemplate({ invoice = {}, settings = {}, scale = 1
                   <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 400 }}>
                     {index + 1}
                   </td>
-                  <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 600 }}>
+                  <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 400 }}>
                     {item.itemName || ''}
                   </td>
                   <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 400 }}>
@@ -396,7 +388,7 @@ export default function InvoiceTemplate({ invoice = {}, settings = {}, scale = 1
             {/* Additional Discount Amount — Semibold (600) */}
             <div style={totalsRowStyle}>
               <span style={totalsLabelStyle}>Additional<br />Discount Amount</span>
-              <span style={{ ...totalsValueStyle, fontWeight: 600 }}>{discountVal} {cs}</span>
+              <span style={{ ...totalsValueStyle, fontWeight: 600 }}>{totalDiscount} {cs}</span>
             </div>
 
             {/* Grand Total — Bold (700) */}

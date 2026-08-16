@@ -75,8 +75,9 @@ export default function DashboardPage() {
   const totalRevenue = invoices.reduce((sum, inv) => {
     const items = inv.line_items || [];
     const subtotal = items.reduce((s, item) => s + (Number(item.quantity) || 0) * (Number(item.rate) || 0), 0);
+    const totalItemDiscount = items.reduce((s, item) => s + (Number(item.discount) || 0), 0);
     const shipping = inv.shipping_free ? 0 : Number(inv.shipping_charges) || 0;
-    return sum + subtotal + shipping - (Number(inv.discount_amount) || 0);
+    return sum + subtotal + shipping - totalItemDiscount;
   }, 0);
   const draftCount = invoices.filter(i => i.status === 'draft').length;
   const finalCount = invoices.filter(i => i.status === 'final').length;
@@ -218,8 +219,9 @@ export default function DashboardPage() {
                 {invoices.map((inv) => {
                   const items = inv.line_items || [];
                   const subtotal = items.reduce((s, item) => s + (Number(item.quantity) || 0) * (Number(item.rate) || 0), 0);
+                  const totalItemDiscount = items.reduce((s, item) => s + (Number(item.discount) || 0), 0);
                   const shipping = inv.shipping_free ? 0 : Number(inv.shipping_charges) || 0;
-                  const grandTotal = subtotal + shipping - (Number(inv.discount_amount) || 0);
+                  const grandTotal = subtotal + shipping - totalItemDiscount;
 
                   const canDelete =
                     session?.user?.role === 'admin' ||

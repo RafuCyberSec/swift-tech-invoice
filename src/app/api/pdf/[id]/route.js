@@ -129,28 +129,20 @@ function buildInvoiceHtml(invoice, settings, fontData) {
     0
   );
 
-  const discountVal = Number(discount_amount) || 0;
-
   const processedItems = line_items.map((item) => {
     const qty = Number(item.quantity) || 0;
     const rate = Number(item.rate) || 0;
     const itemRaw = qty * rate;
-
-    let itemDiscount = Number(item.discount) || 0;
-    if (!itemDiscount && discountVal > 0) {
-      if (line_items.length === 1) {
-        itemDiscount = discountVal;
-      } else if (totalRawSubtotal > 0) {
-        itemDiscount = (itemRaw / totalRawSubtotal) * discountVal;
-      }
-    }
-
+    const itemDiscount = Number(item.discount) || 0;
     const netAmount = Math.max(0, itemRaw - itemDiscount);
     return {
       ...item,
       computedAmount: netAmount,
+      appliedDiscount: itemDiscount,
     };
   });
+
+  const totalDiscount = processedItems.reduce((sum, item) => sum + item.appliedDiscount, 0);
 
   const computedSubtotal = processedItems.reduce((sum, item) => sum + item.computedAmount, 0);
   const effectiveShipping = shipping_free ? 0 : Number(shipping_charges) || 0;
@@ -228,7 +220,7 @@ function buildInvoiceHtml(invoice, settings, fontData) {
     ? processedItems.map((item, i) => `
       <tr>
         <td style="padding:6pt 4pt;font-size:9pt;font-weight:400;text-align:center;border:1px solid #edf2f7">${i + 1}</td>
-        <td style="padding:6pt 4pt;font-size:9pt;font-weight:600;text-align:left;border:1px solid #edf2f7">${item.itemName || ''}</td>
+        <td style="padding:6pt 4pt;font-size:9pt;font-weight:400;text-align:left;border:1px solid #edf2f7">${item.itemName || ''}</td>
         <td style="padding:6pt 4pt;font-size:9pt;font-weight:400;text-align:left;border:1px solid #edf2f7">${item.warranty || 'N/A'}</td>
         <td style="padding:6pt 4pt;font-size:9pt;font-weight:400;text-align:left;border:1px solid #edf2f7">${item.serialNumber || 'N/A'}</td>
         <td style="padding:6pt 4pt;font-size:9pt;border:1px solid #edf2f7">
@@ -368,7 +360,7 @@ function buildInvoiceHtml(invoice, settings, fontData) {
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6pt">
           <span style="color:#707e94;font-size:9pt;font-weight:400;width:110pt">Additional<br>Discount Amount</span>
-          <span style="font-weight:600;font-size:9pt;color:#1a1a1a;text-align:right">${discountVal} ${cs}</span>
+          <span style="font-weight:600;font-size:9pt;color:#1a1a1a;text-align:right">${totalDiscount} ${cs}</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6pt;margin-top:6pt">
           <span style="color:#1a1a1a;font-size:9pt;font-weight:700;width:110pt">Grand Total:</span>
