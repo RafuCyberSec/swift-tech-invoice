@@ -5,6 +5,9 @@ import { amountToWords } from '@/lib/numberToWords';
 /**
  * InvoiceTemplate — Pixel-perfect replica matching ACC-SINV-2026-00087.pdf
  *
+ * LAYOUT: Normal document flow. NO justify-content:space-between on the page wrapper.
+ * Notes/Terms flows directly after totals with a fixed margin — not pinned to bottom.
+ *
  * Font weight spec:
  *   - Title "Sales Invoice": Semibold (600)
  *   - Customer name, date values: Semibold (600)
@@ -37,7 +40,7 @@ export default function InvoiceTemplate({ invoice = {}, settings = {}, scale = 1
     website = 'swifttechngames.com',
     email = 'info@swifttechngames.com',
     phone = '+92 328 0445543',
-    brand_color = '#CC19F4',
+    brand_color = '#d135f4',
     currency_symbol = '₨',
     currency_name = 'PKR',
   } = settings;
@@ -115,6 +118,11 @@ export default function InvoiceTemplate({ invoice = {}, settings = {}, scale = 1
         transformOrigin: 'top left',
       }}
     >
+      {/* 
+        LAYOUT FIX: No justify-content:space-between. No fixed height.
+        Content flows naturally top-to-bottom. Notes/Terms sits after totals
+        with a fixed margin, not pinned to the page bottom.
+      */}
       <div
         className="invoice-page"
         style={{
@@ -128,373 +136,339 @@ export default function InvoiceTemplate({ invoice = {}, settings = {}, scale = 1
           lineHeight: '1.4',
           boxSizing: 'border-box',
           position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
         }}
       >
-        <div>
-          {/* ====== 1. HEADER BAND ====== */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              marginBottom: '24pt',
-            }}
-          >
-            {/* Logo — inline SVG, no <img> tag, brand_color applied directly */}
-            <div style={{ flexShrink: 0 }}>
-              <svg
-                width="120"
-                height="72"
-                viewBox="0 0 400 241"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M128.227 0L0 240.387L163.305 240.398L235.04 105.916L286.908 192.375L243.36 192.372L217.74 240.402L381.045 240.412L236.968 0.248474L134.49 192.365L80.0546 192.362L182.664 1.20656e-07L128.227 0Z"
-                  fill={brand_color}
-                />
-                <path
-                  d="M345.563 2.04553e-05L308.359 69.746L337.175 117.779L400 2.05292e-05L345.563 2.04553e-05Z"
-                  fill={brand_color}
-                />
-              </svg>
-            </div>
-
-            {/* Company Info — Bold brand name (700) */}
-            <div style={{ textAlign: 'left' }}>
-              <div
-                style={{
-                  fontSize: '14pt',
-                  fontWeight: 700,
-                  color: brand_color,
-                  lineHeight: '1.25',
-                  marginBottom: '3pt',
-                }}
-              >
-                {company_name}
-              </div>
-              <div style={{ color: '#707e94', fontSize: '8pt', lineHeight: '1.6' }}>
-                <div>{website}</div>
-                <div>{email}</div>
-                <div>{phone}</div>
-              </div>
-            </div>
+        {/* ====== 1. HEADER BAND — mb 35pt ====== */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: '35pt',
+          }}
+        >
+          {/* Logo — inline SVG, brand_color applied directly */}
+          <div style={{ flexShrink: 0 }}>
+            <svg
+              width="120"
+              height="72"
+              viewBox="0 0 400 241"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M128.227 0L0 240.387L163.305 240.398L235.04 105.916L286.908 192.375L243.36 192.372L217.74 240.402L381.045 240.412L236.968 0.248474L134.49 192.365L80.0546 192.362L182.664 1.20656e-07L128.227 0Z"
+                fill={brand_color}
+              />
+              <path
+                d="M345.563 2.04553e-05L308.359 69.746L337.175 117.779L400 2.05292e-05L345.563 2.04553e-05Z"
+                fill={brand_color}
+              />
+            </svg>
           </div>
 
-          {/* ====== 2. DOCUMENT TITLE — Semibold (600), 18pt ====== */}
-          <div
-            style={{
-              fontSize: '18pt',
-              fontWeight: 600,
-              color: '#1a1a1a',
-              marginBottom: '10pt',
-            }}
-          >
-            Sales Invoice
+          {/* Company Info — Bold brand name (700) */}
+          <div style={{ textAlign: 'left' }}>
+            <div
+              style={{
+                fontSize: '14pt',
+                fontWeight: 700,
+                color: brand_color,
+                lineHeight: '1.25',
+                marginBottom: '3pt',
+              }}
+            >
+              {company_name}
+            </div>
+            <div style={{ color: '#707e94', fontSize: '8pt', lineHeight: '1.6' }}>
+              <div>{website}</div>
+              <div>{email}</div>
+              <div>{phone}</div>
+            </div>
           </div>
+        </div>
 
-          {/* ====== 3. INVOICE NUMBER — Regular (400), 9.8pt ====== */}
-          <div
-            style={{
-              color: '#707e94',
-              fontSize: '9.8pt',
-              marginBottom: '10pt',
-            }}
-          >
-            {invoiceNumber}
-          </div>
+        {/* ====== 2. DOCUMENT TITLE — Semibold (600), 18pt, mb 28pt ====== */}
+        <div
+          style={{
+            fontSize: '18pt',
+            fontWeight: 600,
+            color: '#1a1a1a',
+            marginBottom: '28pt',
+          }}
+        >
+          Sales Invoice
+        </div>
 
-          <hr
-            style={{
-              border: 'none',
-              borderTop: '1px solid #edf2f7',
-              margin: '0 0 18pt 0',
-            }}
-          />
+        {/* ====== 3. INVOICE NUMBER — Regular (400), 9.8pt, mb 25pt ====== */}
+        <div
+          style={{
+            color: '#707e94',
+            fontSize: '9.8pt',
+            marginBottom: '25pt',
+          }}
+        >
+          {invoiceNumber}
+        </div>
 
-          {/* ====== 4. BILL-TO / META TWO-COLUMN BLOCK ====== */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '16pt',
-              marginBottom: '20pt',
-            }}
-          >
-            {/* Left Column — Customer Info */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10pt' }}>
-              {/* Customer Name — Semibold (600) */}
-              <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <span style={metaLabelStyle}>Customer Name:</span>
-                <span style={{ ...metaValueStyle, fontWeight: 600 }}>{customerName}</span>
-              </div>
-
-              {/* Address — Regular (400) */}
-              <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <span style={metaLabelStyle}>Address:</span>
-                <span style={{ ...metaValueStyle, fontWeight: 400, whiteSpace: 'pre-line', lineHeight: '1.5' }}>
-                  {customerAddress}
-                </span>
-              </div>
-
-              {/* Phone No — Regular (400) */}
-              <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <span style={metaLabelStyle}>Phone No:</span>
-                <span style={{ ...metaValueStyle, fontWeight: 400 }}>{customerPhone}</span>
-              </div>
+        {/* ====== 4. BILL-TO / META TWO-COLUMN BLOCK — mb 30pt ====== */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '16pt',
+            marginBottom: '30pt',
+          }}
+        >
+          {/* Left Column — Customer Info, gap 14pt between rows */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14pt' }}>
+            {/* Customer Name — Semibold (600) */}
+            <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+              <span style={metaLabelStyle}>Customer Name:</span>
+              <span style={{ ...metaValueStyle, fontWeight: 600 }}>{customerName}</span>
             </div>
 
-            {/* Right Column — Dates — Semibold values (600) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10pt', paddingLeft: '20pt' }}>
-              {/* Date */}
-              <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <span style={metaDateLabelStyle}>Date:</span>
-                <span style={{ ...metaValueStyle, fontWeight: 600 }}>{formatDateStr(invoiceDate)}</span>
-              </div>
+            {/* Address — Regular (400) */}
+            <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+              <span style={metaLabelStyle}>Address:</span>
+              <span style={{ ...metaValueStyle, fontWeight: 400, whiteSpace: 'pre-line', lineHeight: '1.5' }}>
+                {customerAddress}
+              </span>
+            </div>
 
-              {/* Payment Due Date */}
-              <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <span style={metaDateLabelStyle}>Payment Due<br />Date:</span>
-                <span style={{ ...metaValueStyle, fontWeight: 600 }}>{formatDateStr(dueDate || invoiceDate)}</span>
-              </div>
+            {/* Phone No — Regular (400) */}
+            <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+              <span style={metaLabelStyle}>Phone No:</span>
+              <span style={{ ...metaValueStyle, fontWeight: 400 }}>{customerPhone}</span>
             </div>
           </div>
 
-          {/* ====== 5. LINE ITEMS TABLE — fixed-pt column widths ====== */}
-          <table
-            style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              marginBottom: '16pt',
-              fontSize: '9pt',
-              border: '1px solid #edf2f7',
-            }}
-          >
-            <colgroup>
-              <col style={{ width: '10mm' }} />   {/* Sr */}
-              <col style={{ width: '34mm' }} />   {/* Item Name */}
-              <col style={{ width: '35mm' }} />   {/* Warranty */}
-              <col style={{ width: '39mm' }} />   {/* Serial Number */}
-              <col style={{ width: '27.5mm' }} /> {/* Quantity */}
-              <col style={{ width: '15mm' }} />   {/* Rate */}
-              <col style={{ width: '16mm' }} />   {/* Amount */}
-            </colgroup>
-            <thead>
-              <tr style={{ backgroundColor: '#fafafa' }}>
-                <th style={{ ...thStyle, textAlign: 'center' }}>Sr</th>
-                <th style={{ ...thStyle, textAlign: 'left' }}>Item Name</th>
-                <th style={{ ...thStyle, textAlign: 'left' }}>Warranty</th>
-                <th style={{ ...thStyle, textAlign: 'left' }}>Serial Number</th>
-                <th style={{ ...thStyle, textAlign: 'center' }}>Quantity</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Rate</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {processedItems.length > 0 ? (
-                processedItems.map((item, index) => (
-                  <tr key={index} style={{ borderTop: '1px solid #edf2f7' }}>
-                    {/* Sr — Regular (400) */}
-                    <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 400 }}>
-                      {index + 1}
-                    </td>
+          {/* Right Column — Dates — Semibold values (600) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14pt', paddingLeft: '20pt' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+              <span style={metaDateLabelStyle}>Date:</span>
+              <span style={{ ...metaValueStyle, fontWeight: 600 }}>{formatDateStr(invoiceDate)}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+              <span style={metaDateLabelStyle}>Payment Due<br />Date:</span>
+              <span style={{ ...metaValueStyle, fontWeight: 600 }}>{formatDateStr(dueDate || invoiceDate)}</span>
+            </div>
+          </div>
+        </div>
 
-                    {/* Item Name — Semibold (600) */}
-                    <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 600 }}>
-                      {item.itemName || ''}
-                    </td>
-
-                    {/* Warranty — Regular (400) */}
-                    <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 400 }}>
-                      {item.warranty || 'N/A'}
-                    </td>
-
-                    {/* Serial Number — Regular (400) */}
-                    <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 400 }}>
-                      {item.serialNumber || 'N/A'}
-                    </td>
-
-                    {/* Quantity: Unit on left, number on right — Regular (400) */}
-                    <td style={tdStyle}>
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          padding: '0 2pt',
-                        }}
-                      >
-                        <span style={{ fontSize: '8pt', color: '#1a1a1a', fontWeight: 400 }}>
-                          {item.unit || 'Unit'}
-                        </span>
-                        <span style={{ fontWeight: 400, fontSize: '9pt' }}>
-                          {item.quantity || 1}
-                        </span>
+        {/* ====== 5. LINE ITEMS TABLE — fixed-pt column widths, mb 20pt ====== */}
+        <table
+          style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            marginBottom: '20pt',
+            fontSize: '9pt',
+            border: '1px solid #edf2f7',
+          }}
+        >
+          <colgroup>
+            <col style={{ width: '10mm' }} />
+            <col style={{ width: '34mm' }} />
+            <col style={{ width: '35mm' }} />
+            <col style={{ width: '39mm' }} />
+            <col style={{ width: '27.5mm' }} />
+            <col style={{ width: '15mm' }} />
+            <col style={{ width: '16mm' }} />
+          </colgroup>
+          <thead>
+            <tr style={{ backgroundColor: '#fafafa' }}>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Sr</th>
+              <th style={{ ...thStyle, textAlign: 'left' }}>Item Name</th>
+              <th style={{ ...thStyle, textAlign: 'left' }}>Warranty</th>
+              <th style={{ ...thStyle, textAlign: 'left' }}>Serial Number</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Quantity</th>
+              <th style={{ ...thStyle, textAlign: 'right' }}>Rate</th>
+              <th style={{ ...thStyle, textAlign: 'right' }}>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {processedItems.length > 0 ? (
+              processedItems.map((item, index) => (
+                <tr key={index} style={{ borderTop: '1px solid #edf2f7' }}>
+                  <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 400 }}>
+                    {index + 1}
+                  </td>
+                  <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 600 }}>
+                    {item.itemName || ''}
+                  </td>
+                  <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 400 }}>
+                    {item.warranty || 'N/A'}
+                  </td>
+                  <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 400 }}>
+                    {item.serialNumber || 'N/A'}
+                  </td>
+                  <td style={tdStyle}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '0 2pt',
+                      }}
+                    >
+                      <span style={{ fontSize: '8pt', color: '#1a1a1a', fontWeight: 400 }}>
+                        {item.unit || 'Unit'}
+                      </span>
+                      <span style={{ fontWeight: 400, fontSize: '9pt' }}>
+                        {item.quantity || 1}
+                      </span>
+                    </div>
+                  </td>
+                  <td style={{ ...tdStyle, textAlign: 'right' }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '8pt', color: '#1a1a1a', fontWeight: 400, marginBottom: '1pt' }}>
+                        {cs}
                       </div>
-                    </td>
-
-                    {/* Rate: ₨ top right, rate below — Regular (400) */}
-                    <td style={{ ...tdStyle, textAlign: 'right' }}>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '8pt', color: '#1a1a1a', fontWeight: 400, marginBottom: '1pt' }}>
-                          {cs}
-                        </div>
-                        <div style={{ fontWeight: 400, fontSize: '9pt' }}>
-                          {formatNum(item.rate)}
-                        </div>
+                      <div style={{ fontWeight: 400, fontSize: '9pt' }}>
+                        {formatNum(item.rate)}
                       </div>
-                    </td>
-
-                    {/* Amount: ₨ top right, net amount below — Regular (400) */}
-                    <td style={{ ...tdStyle, textAlign: 'right' }}>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '8pt', color: '#1a1a1a', fontWeight: 400, marginBottom: '1pt' }}>
-                          {cs}
-                        </div>
-                        <div style={{ fontWeight: 400, fontSize: '9pt' }}>
-                          {formatNum(item.computedAmount)}
-                        </div>
+                    </div>
+                  </td>
+                  <td style={{ ...tdStyle, textAlign: 'right' }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '8pt', color: '#1a1a1a', fontWeight: 400, marginBottom: '1pt' }}>
+                        {cs}
                       </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="7"
-                    style={{
-                      padding: '18pt',
-                      textAlign: 'center',
-                      color: '#a0aec0',
-                      fontStyle: 'italic',
-                      borderTop: '1px solid #edf2f7',
-                    }}
-                  >
-                    No items in invoice
+                      <div style={{ fontWeight: 400, fontSize: '9pt' }}>
+                        {formatNum(item.computedAmount)}
+                      </div>
+                    </div>
                   </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-
-          {/* ====== 6. TOTALS & SUMMARY SECTION ====== */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              marginBottom: '24pt',
-            }}
-          >
-            {/* Left Side: Total Quantity — Regular (400) */}
-            <div>
-              <div style={{ color: '#707e94', fontSize: '9pt', fontWeight: 400 }}>
-                Total Quantity:
-              </div>
-              <div style={{ fontWeight: 400, fontSize: '9.8pt', color: '#1a1a1a', marginTop: '3pt' }}>
-                {totalQuantity}
-              </div>
-            </div>
-
-            {/* Right Side: Totals Grid */}
-            <div style={{ width: '230pt' }}>
-              {/* Total — Regular (400) */}
-              <div style={{ ...totalsRowStyle, marginBottom: '12pt' }}>
-                <span style={totalsLabelStyle}>Total</span>
-                <span style={{ ...totalsValueStyle, fontWeight: 400 }}>{cs} {formatNum(computedSubtotal)}</span>
-              </div>
-
-              {/* Shipping Charges — Semibold (600) */}
-              <div style={totalsRowStyle}>
-                <span style={totalsLabelStyle}>Shipping Charges</span>
-                <span style={{ ...totalsValueStyle, fontWeight: 600 }}>
-                  {shippingFree ? 'Free' : `${formatNum(effectiveShipping)} ${cs}`}
-                </span>
-              </div>
-
-              {/* Additional Discount Amount — Semibold (600) */}
-              <div style={totalsRowStyle}>
-                <span style={totalsLabelStyle}>Additional<br />Discount Amount</span>
-                <span style={{ ...totalsValueStyle, fontWeight: 600 }}>{discountVal} {cs}</span>
-              </div>
-
-              {/* Grand Total — Bold (700) label + Bold (700) value */}
-              <div style={{ ...totalsRowStyle, marginTop: '6pt' }}>
-                <span style={{ ...totalsLabelStyle, fontWeight: 700, color: '#1a1a1a' }}>
-                  Grand Total:
-                </span>
-                <span style={{ ...totalsValueStyle, fontWeight: 700, fontSize: '9.8pt', color: '#1a1a1a' }}>
-                  {cs} {formatNum(grandTotal)}
-                </span>
-              </div>
-
-              {/* In Words — Semibold (600) */}
-              <div style={{ ...totalsRowStyle, marginTop: '10pt', alignItems: 'flex-start' }}>
-                <span style={totalsLabelStyle}>In Words:</span>
-                <span
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="7"
                   style={{
-                    ...totalsValueStyle,
-                    fontWeight: 600,
-                    fontSize: '8.5pt',
-                    color: '#1a1a1a',
-                    lineHeight: '1.4',
+                    padding: '18pt',
+                    textAlign: 'center',
+                    color: '#a0aec0',
+                    fontStyle: 'italic',
+                    borderTop: '1px solid #edf2f7',
                   }}
                 >
-                  {inWords}
-                </span>
-              </div>
+                  No items in invoice
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        {/* ====== 6. TOTALS — mb 30pt (exact gap before Notes) ====== */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: '30pt',
+          }}
+        >
+          <div>
+            <div style={{ color: '#707e94', fontSize: '9pt', fontWeight: 400 }}>
+              Total Quantity:
+            </div>
+            <div style={{ fontWeight: 400, fontSize: '9.8pt', color: '#1a1a1a', marginTop: '3pt' }}>
+              {totalQuantity}
+            </div>
+          </div>
+
+          <div style={{ width: '230pt' }}>
+            {/* Total — mb 12pt */}
+            <div style={{ ...totalsRowStyle, marginBottom: '12pt' }}>
+              <span style={totalsLabelStyle}>Total</span>
+              <span style={{ ...totalsValueStyle, fontWeight: 400 }}>{cs} {formatNum(computedSubtotal)}</span>
+            </div>
+
+            {/* Shipping Charges — Semibold (600) */}
+            <div style={totalsRowStyle}>
+              <span style={totalsLabelStyle}>Shipping Charges</span>
+              <span style={{ ...totalsValueStyle, fontWeight: 600 }}>
+                {shippingFree ? 'Free' : `${formatNum(effectiveShipping)} ${cs}`}
+              </span>
+            </div>
+
+            {/* Additional Discount Amount — Semibold (600) */}
+            <div style={totalsRowStyle}>
+              <span style={totalsLabelStyle}>Additional<br />Discount Amount</span>
+              <span style={{ ...totalsValueStyle, fontWeight: 600 }}>{discountVal} {cs}</span>
+            </div>
+
+            {/* Grand Total — Bold (700) */}
+            <div style={{ ...totalsRowStyle, marginTop: '6pt' }}>
+              <span style={{ ...totalsLabelStyle, fontWeight: 700, color: '#1a1a1a' }}>
+                Grand Total:
+              </span>
+              <span style={{ ...totalsValueStyle, fontWeight: 700, fontSize: '9.8pt', color: '#1a1a1a' }}>
+                {cs} {formatNum(grandTotal)}
+              </span>
+            </div>
+
+            {/* In Words — Semibold (600) */}
+            <div style={{ ...totalsRowStyle, marginTop: '10pt', alignItems: 'flex-start' }}>
+              <span style={totalsLabelStyle}>In Words:</span>
+              <span
+                style={{
+                  ...totalsValueStyle,
+                  fontWeight: 600,
+                  fontSize: '8.5pt',
+                  color: '#1a1a1a',
+                  lineHeight: '1.4',
+                }}
+              >
+                {inWords}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* BOTTOM SECTION: Notes & Terms */}
-        <div>
-          {/* ====== 7. NOTES — Bold (700) header ====== */}
-          {notes && (
-            <div style={{ marginBottom: '16pt' }}>
-              <div
-                style={{
-                  fontWeight: 700,
-                  fontSize: '9.8pt',
-                  color: '#1a1a1a',
-                  marginBottom: '4pt',
-                }}
-              >
-                Notes
-              </div>
-              <div style={{ color: '#2d3748', fontSize: '9pt', lineHeight: '1.5' }}>{notes}</div>
+        {/* ====== 7. NOTES — NORMAL FLOW, not pinned to bottom ====== */}
+        {notes && (
+          <div style={{ marginBottom: '18pt' }}>
+            <div
+              style={{
+                fontWeight: 700,
+                fontSize: '9.8pt',
+                color: '#1a1a1a',
+                marginBottom: '4pt',
+              }}
+            >
+              Notes
             </div>
-          )}
+            <div style={{ color: '#2d3748', fontSize: '9pt', lineHeight: '1.5' }}>{notes}</div>
+          </div>
+        )}
 
-          {/* ====== 8. TERMS AND CONDITIONS — Bold (700) header ====== */}
-          {terms && (
-            <div>
-              <div
-                style={{
-                  fontWeight: 700,
-                  fontSize: '9.8pt',
-                  color: '#1a1a1a',
-                  marginBottom: '4pt',
-                }}
-              >
-                Terms and Conditions
-              </div>
-              <div
-                style={{
-                  color: '#2d3748',
-                  fontSize: '8.5pt',
-                  lineHeight: '1.55',
-                  whiteSpace: 'pre-line',
-                }}
-              >
-                {terms}
-              </div>
+        {/* ====== 8. TERMS AND CONDITIONS ====== */}
+        {terms && (
+          <div style={{ marginBottom: '25pt' }}>
+            <div
+              style={{
+                fontWeight: 700,
+                fontSize: '9.8pt',
+                color: '#1a1a1a',
+                marginBottom: '4pt',
+              }}
+            >
+              Terms and Conditions
             </div>
-          )}
-        </div>
+            <div
+              style={{
+                color: '#2d3748',
+                fontSize: '8.5pt',
+                lineHeight: '1.55',
+                whiteSpace: 'pre-line',
+              }}
+            >
+              {terms}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

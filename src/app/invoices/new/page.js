@@ -52,7 +52,7 @@ export default function NewInvoicePage() {
         website: 'swifttechngames.com',
         email: 'info@swifttechngames.com',
         phone: '+92 328 0445543',
-        brand_color: '#CC19F4',
+        brand_color: '#d135f4',
         currency_symbol: '₨',
         currency_name: 'PKR',
         logo_path: '/logo.svg',

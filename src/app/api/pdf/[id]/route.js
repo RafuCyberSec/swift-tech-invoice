@@ -57,11 +57,25 @@ export async function GET(req, { params }) {
         },
       });
     } catch (puppeteerError) {
-      console.warn('Puppeteer not available, returning HTML:', puppeteerError.message);
+      console.warn('Puppeteer not available, returning HTML for client-side printing:', puppeteerError.message);
+      // Return HTML that the client can print to PDF via window.print()
+      // Wrap in a full page with print-ready styling
+      const printableHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${invoice.invoice_number || 'Invoice'}</title>
+  <script>
+    window.onload = function() {
+      window.print();
+    };
+  </script>
+</head>
+<body>${html.replace(/<!DOCTYPE html>|<\/?html>|<head>[\s\S]*?<\/head>|<\/?body>/gi, '')}</body>
+</html>`;
       return new NextResponse(html, {
         headers: {
-          'Content-Type': 'text/html',
-          'Content-Disposition': `inline; filename="${invoice.invoice_number || 'invoice'}.html"`,
+          'Content-Type': 'text/html; charset=utf-8',
         },
       });
     }
@@ -117,7 +131,7 @@ function buildInvoiceHtml(invoice, settings, fontData) {
     website = 'swifttechngames.com',
     email = 'info@swifttechngames.com',
     phone = '+92 328 0445543',
-    brand_color = '#CC19F4',
+    brand_color = '#d135f4',
     currency_symbol = '₨',
     currency_name = 'PKR',
   } = settings;
@@ -248,6 +262,11 @@ function buildInvoiceHtml(invoice, settings, fontData) {
     `).join('')
     : `<tr><td colspan="7" style="padding:18pt;text-align:center;color:#a0aec0;font-style:italic;border:1px solid #edf2f7">No items in invoice</td></tr>`;
 
+  // ========================================================================================
+  // LAYOUT: Normal document flow. NO justify-content:space-between. NO overflow:hidden.
+  // Notes/Terms flows directly after totals with a fixed margin-top.
+  // The page height is whatever content naturally needs — Puppeteer's format:'A4' handles sizing.
+  // ========================================================================================
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -266,142 +285,127 @@ function buildInvoiceHtml(invoice, settings, fontData) {
   </style>
 </head>
 <body>
-  <div style="width:210mm;height:297mm;padding:12mm 15mm 10mm 15mm;background:#fff;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden">
-    <div>
-      <!-- Header -->
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24pt">
-        <div>${logoSvg}</div>
-        <div style="text-align:left">
-          <div style="font-size:14pt;font-weight:700;color:${brand_color};line-height:1.25;margin-bottom:3pt">${company_name}</div>
-          <div style="color:#707e94;font-size:8pt;line-height:1.6">
-            <div>${website}</div>
-            <div>${email}</div>
-            <div>${phone}</div>
-          </div>
-        </div>
-      </div>
+  <div style="width:210mm;padding:12mm 15mm 10mm 15mm;background:#fff">
 
-      <!-- Title: Sales Invoice — Semibold 18pt per spec -->
-      <div style="font-size:18pt;font-weight:600;color:#1a1a1a;margin-bottom:10pt">Sales Invoice</div>
-
-      <!-- Invoice Number — Regular 9.8pt -->
-      <div style="color:#707e94;font-size:9.8pt;margin-bottom:10pt">${invoice_number}</div>
-      <hr style="border:none;border-top:1px solid #edf2f7;margin:0 0 18pt 0">
-
-      <!-- Customer / Meta — two-column grid -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16pt;margin-bottom:20pt">
-        <!-- Left Column: Customer Info -->
-        <div style="display:flex;flex-direction:column;gap:10pt">
-          <!-- Customer Name: Semibold value -->
-          <div style="display:flex;align-items:flex-start">
-            <span style="width:90pt;flex-shrink:0;color:#707e94;font-size:9.8pt;font-weight:400">Customer Name:</span>
-            <span style="font-weight:600;font-size:9.8pt;color:#1a1a1a">${customer_name}</span>
-          </div>
-          <!-- Address: Regular value -->
-          <div style="display:flex;align-items:flex-start">
-            <span style="width:90pt;flex-shrink:0;color:#707e94;font-size:9.8pt;font-weight:400">Address:</span>
-            <span style="font-weight:400;font-size:9.8pt;color:#1a1a1a;white-space:pre-line;line-height:1.5">${customer_address}</span>
-          </div>
-          <!-- Phone: Regular value -->
-          <div style="display:flex;align-items:flex-start">
-            <span style="width:90pt;flex-shrink:0;color:#707e94;font-size:9.8pt;font-weight:400">Phone No:</span>
-            <span style="font-weight:400;font-size:9.8pt;color:#1a1a1a">${customer_phone}</span>
-          </div>
-        </div>
-
-        <!-- Right Column: Dates — starts ~x=308pt -->
-        <div style="display:flex;flex-direction:column;gap:10pt;padding-left:20pt">
-          <div style="display:flex;align-items:flex-start">
-            <span style="width:95pt;flex-shrink:0;color:#707e94;font-size:9.8pt;font-weight:400">Date:</span>
-            <span style="font-weight:600;font-size:9.8pt;color:#1a1a1a">${formatDateStr(invoice_date)}</span>
-          </div>
-          <div style="display:flex;align-items:flex-start">
-            <span style="width:95pt;flex-shrink:0;color:#707e94;font-size:9.8pt;font-weight:400;line-height:1.3">Payment Due<br>Date:</span>
-            <span style="font-weight:600;font-size:9.8pt;color:#1a1a1a">${formatDateStr(due_date || invoice_date)}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Table — fixed-pt column widths via colgroup -->
-      <table style="width:100%;border-collapse:collapse;margin-bottom:16pt;font-size:9pt;border:1px solid #edf2f7">
-        <colgroup>
-          <col style="width:10mm">   <!-- Sr: ~28.5pt -->
-          <col style="width:34mm">   <!-- Item Name: ~96pt -->
-          <col style="width:35mm">   <!-- Warranty: ~99.5pt -->
-          <col style="width:39mm">   <!-- Serial Number: ~111pt -->
-          <col style="width:27.5mm"> <!-- Quantity: ~78pt -->
-          <col style="width:15mm">   <!-- Rate: ~43pt -->
-          <col style="width:16mm">   <!-- Amount: ~45pt -->
-        </colgroup>
-        <thead>
-          <tr style="background:#fafafa">
-            <th style="padding:6pt 4pt;font-size:9pt;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:center">Sr</th>
-            <th style="padding:6pt 4pt;font-size:9pt;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:left">Item Name</th>
-            <th style="padding:6pt 4pt;font-size:9pt;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:left">Warranty</th>
-            <th style="padding:6pt 4pt;font-size:9pt;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:left">Serial Number</th>
-            <th style="padding:6pt 4pt;font-size:9pt;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:center">Quantity</th>
-            <th style="padding:6pt 4pt;font-size:9pt;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:right">Rate</th>
-            <th style="padding:6pt 4pt;font-size:9pt;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:right">Amount</th>
-          </tr>
-        </thead>
-        <tbody>${lineItemsHtml}</tbody>
-      </table>
-
-      <!-- Totals Section -->
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24pt">
-        <!-- Left: Total Quantity -->
-        <div>
-          <div style="color:#707e94;font-size:9pt;font-weight:400">Total Quantity:</div>
-          <div style="font-weight:400;font-size:9.8pt;color:#1a1a1a;margin-top:3pt">${totalQuantity}</div>
-        </div>
-
-        <!-- Right: Totals Grid -->
-        <div style="width:230pt">
-          <!-- Total -->
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12pt">
-            <span style="color:#707e94;font-size:9pt;font-weight:400;width:110pt">Total</span>
-            <span style="font-weight:400;font-size:9pt;color:#1a1a1a;text-align:right">${cs} ${formatNum(computedSubtotal)}</span>
-          </div>
-          <!-- Shipping Charges -->
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6pt">
-            <span style="color:#707e94;font-size:9pt;font-weight:400;width:110pt">Shipping Charges</span>
-            <span style="font-weight:600;font-size:9pt;color:#1a1a1a;text-align:right">${shipping_free ? 'Free' : `${formatNum(effectiveShipping)} ${cs}`}</span>
-          </div>
-          <!-- Additional Discount Amount -->
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6pt">
-            <span style="color:#707e94;font-size:9pt;font-weight:400;width:110pt">Additional<br>Discount Amount</span>
-            <span style="font-weight:600;font-size:9pt;color:#1a1a1a;text-align:right">${discountVal} ${cs}</span>
-          </div>
-          <!-- Grand Total: Bold label + Bold value -->
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6pt;margin-top:6pt">
-            <span style="color:#1a1a1a;font-size:9pt;font-weight:700;width:110pt">Grand Total:</span>
-            <span style="font-weight:700;font-size:9.8pt;color:#1a1a1a;text-align:right">${cs} ${formatNum(grandTotal)}</span>
-          </div>
-          <!-- In Words -->
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-top:10pt">
-            <span style="color:#707e94;font-size:9pt;font-weight:400;width:110pt">In Words:</span>
-            <span style="font-weight:600;font-size:8.5pt;color:#1a1a1a;text-align:right;line-height:1.4">${inWords}</span>
-          </div>
+    <!-- Header: logo left, company right — mb 35pt -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:35pt">
+      <div>${logoSvg}</div>
+      <div style="text-align:left">
+        <div style="font-size:14pt;font-weight:700;color:${brand_color};line-height:1.25;margin-bottom:3pt">${company_name}</div>
+        <div style="color:#707e94;font-size:8pt;line-height:1.6">
+          <div>${website}</div>
+          <div>${email}</div>
+          <div>${phone}</div>
         </div>
       </div>
     </div>
 
-    <!-- Bottom Section: Notes & Terms -->
-    <div>
-      ${notes ? `
-        <div style="margin-bottom:16pt">
-          <div style="font-weight:700;font-size:9.8pt;color:#1a1a1a;margin-bottom:4pt">Notes</div>
-          <div style="color:#2d3748;font-size:9pt;line-height:1.5">${notes}</div>
-        </div>
-      ` : ''}
+    <!-- Title: Sales Invoice — 18pt Semibold, mb 28pt -->
+    <div style="font-size:18pt;font-weight:600;color:#1a1a1a;margin-bottom:28pt">Sales Invoice</div>
 
-      ${terms ? `
-        <div>
-          <div style="font-weight:700;font-size:9.8pt;color:#1a1a1a;margin-bottom:4pt">Terms and Conditions</div>
-          <div style="color:#2d3748;font-size:8.5pt;line-height:1.55;white-space:pre-line">${terms}</div>
+    <!-- Invoice Number — 9.8pt Regular, mb 25pt -->
+    <div style="color:#707e94;font-size:9.8pt;margin-bottom:25pt">${invoice_number}</div>
+
+    <!-- Customer / Meta — two-column grid, mb 30pt -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16pt;margin-bottom:30pt">
+      <!-- Left Column: Customer Info -->
+      <div style="display:flex;flex-direction:column;gap:14pt">
+        <div style="display:flex;align-items:flex-start">
+          <span style="width:90pt;flex-shrink:0;color:#707e94;font-size:9.8pt;font-weight:400">Customer Name:</span>
+          <span style="font-weight:600;font-size:9.8pt;color:#1a1a1a">${customer_name}</span>
         </div>
-      ` : ''}
+        <div style="display:flex;align-items:flex-start">
+          <span style="width:90pt;flex-shrink:0;color:#707e94;font-size:9.8pt;font-weight:400">Address:</span>
+          <span style="font-weight:400;font-size:9.8pt;color:#1a1a1a;white-space:pre-line;line-height:1.5">${customer_address}</span>
+        </div>
+        <div style="display:flex;align-items:flex-start">
+          <span style="width:90pt;flex-shrink:0;color:#707e94;font-size:9.8pt;font-weight:400">Phone No:</span>
+          <span style="font-weight:400;font-size:9.8pt;color:#1a1a1a">${customer_phone}</span>
+        </div>
+      </div>
+      <!-- Right Column: Dates -->
+      <div style="display:flex;flex-direction:column;gap:14pt;padding-left:20pt">
+        <div style="display:flex;align-items:flex-start">
+          <span style="width:95pt;flex-shrink:0;color:#707e94;font-size:9.8pt;font-weight:400">Date:</span>
+          <span style="font-weight:600;font-size:9.8pt;color:#1a1a1a">${formatDateStr(invoice_date)}</span>
+        </div>
+        <div style="display:flex;align-items:flex-start">
+          <span style="width:95pt;flex-shrink:0;color:#707e94;font-size:9.8pt;font-weight:400;line-height:1.3">Payment Due<br>Date:</span>
+          <span style="font-weight:600;font-size:9.8pt;color:#1a1a1a">${formatDateStr(due_date || invoice_date)}</span>
+        </div>
+      </div>
     </div>
+
+    <!-- Table — fixed-pt column widths, mb 20pt -->
+    <table style="width:100%;border-collapse:collapse;margin-bottom:20pt;font-size:9pt;border:1px solid #edf2f7">
+      <colgroup>
+        <col style="width:10mm">
+        <col style="width:34mm">
+        <col style="width:35mm">
+        <col style="width:39mm">
+        <col style="width:27.5mm">
+        <col style="width:15mm">
+        <col style="width:16mm">
+      </colgroup>
+      <thead>
+        <tr style="background:#fafafa">
+          <th style="padding:6pt 4pt;font-size:9pt;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:center">Sr</th>
+          <th style="padding:6pt 4pt;font-size:9pt;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:left">Item Name</th>
+          <th style="padding:6pt 4pt;font-size:9pt;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:left">Warranty</th>
+          <th style="padding:6pt 4pt;font-size:9pt;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:left">Serial Number</th>
+          <th style="padding:6pt 4pt;font-size:9pt;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:center">Quantity</th>
+          <th style="padding:6pt 4pt;font-size:9pt;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:right">Rate</th>
+          <th style="padding:6pt 4pt;font-size:9pt;font-weight:400;color:#707e94;border:1px solid #edf2f7;text-align:right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>${lineItemsHtml}</tbody>
+    </table>
+
+    <!-- Totals — mb 30pt (this is the exact gap before Notes) -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:30pt">
+      <div>
+        <div style="color:#707e94;font-size:9pt;font-weight:400">Total Quantity:</div>
+        <div style="font-weight:400;font-size:9.8pt;color:#1a1a1a;margin-top:3pt">${totalQuantity}</div>
+      </div>
+      <div style="width:230pt">
+        <!-- Total — mb 12pt -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12pt">
+          <span style="color:#707e94;font-size:9pt;font-weight:400;width:110pt">Total</span>
+          <span style="font-weight:400;font-size:9pt;color:#1a1a1a;text-align:right">${cs} ${formatNum(computedSubtotal)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6pt">
+          <span style="color:#707e94;font-size:9pt;font-weight:400;width:110pt">Shipping Charges</span>
+          <span style="font-weight:600;font-size:9pt;color:#1a1a1a;text-align:right">${shipping_free ? 'Free' : `${formatNum(effectiveShipping)} ${cs}`}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6pt">
+          <span style="color:#707e94;font-size:9pt;font-weight:400;width:110pt">Additional<br>Discount Amount</span>
+          <span style="font-weight:600;font-size:9pt;color:#1a1a1a;text-align:right">${discountVal} ${cs}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6pt;margin-top:6pt">
+          <span style="color:#1a1a1a;font-size:9pt;font-weight:700;width:110pt">Grand Total:</span>
+          <span style="font-weight:700;font-size:9.8pt;color:#1a1a1a;text-align:right">${cs} ${formatNum(grandTotal)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-top:10pt">
+          <span style="color:#707e94;font-size:9pt;font-weight:400;width:110pt">In Words:</span>
+          <span style="font-weight:600;font-size:8.5pt;color:#1a1a1a;text-align:right;line-height:1.4">${inWords}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes & Terms — NORMAL FLOW, not pinned to bottom -->
+    ${notes ? `
+      <div style="margin-bottom:18pt">
+        <div style="font-weight:700;font-size:9.8pt;color:#1a1a1a;margin-bottom:4pt">Notes</div>
+        <div style="color:#2d3748;font-size:9pt;line-height:1.5">${notes}</div>
+      </div>
+    ` : ''}
+    ${terms ? `
+      <div style="margin-bottom:25pt">
+        <div style="font-weight:700;font-size:9.8pt;color:#1a1a1a;margin-bottom:4pt">Terms and Conditions</div>
+        <div style="color:#2d3748;font-size:8.5pt;line-height:1.55;white-space:pre-line">${terms}</div>
+      </div>
+    ` : ''}
+
   </div>
 </body>
 </html>`;

@@ -3,6 +3,9 @@ import path from 'path';
 import fs from 'fs';
 
 const isVercel = process.env.VERCEL === '1' || process.env.VERCEL;
+// WARNING: On Vercel, /tmp is ephemeral — wiped on cold starts.
+// For persistent data on Vercel, use an external database (e.g. Turso, PlanetScale, Supabase).
+// Locally, the database is stored in ./database/invoices.db and persists across restarts.
 const DB_DIR = isVercel 
   ? path.join('/tmp', 'database') 
   : path.join(process.cwd(), 'database');
@@ -104,7 +107,7 @@ function initializeSchema(db) {
       website TEXT DEFAULT 'swifttechngames.com',
       email TEXT DEFAULT 'info@swifttechngames.com',
       phone TEXT DEFAULT '+92 328 0445543',
-      brand_color TEXT DEFAULT '#CC19F4',
+      brand_color TEXT DEFAULT '#d135f4',
       currency_symbol TEXT DEFAULT '₨',
       currency_name TEXT DEFAULT 'PKR',
       logo_path TEXT DEFAULT '/logo.svg',
@@ -184,15 +187,16 @@ function runMigrations(db) {
  * Auto-seed the hardcoded admin user if not present
  */
 function seedAdminUser(db) {
-  const result = db.exec('SELECT id, password_hash FROM users WHERE email = ?', [ADMIN_EMAIL]);
+  const result = db.exec('SELECT id, password_hash, name FROM users WHERE email = ?', [ADMIN_EMAIL]);
   if (result.length === 0 || result[0].values.length === 0) {
-    // Admin doesn't exist — create
+    // Admin doesn't exist — create with default name
     db.run(
       'INSERT INTO users (name, email, password_hash, role, is_system) VALUES (?, ?, ?, ?, ?)',
       [ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD_HASH, 'admin', 1]
     );
   } else {
-    // Admin exists — ensure password is up to date and is_system is set
+    // Admin exists — ensure password and role are up to date, but DO NOT overwrite the name.
+    // The user may have changed their display name via the UI — respect that.
     const userId = result[0].values[0][0];
     db.run(
       'UPDATE users SET password_hash = ?, role = ?, is_system = 1 WHERE id = ?',

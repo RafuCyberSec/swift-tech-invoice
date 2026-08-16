@@ -4,7 +4,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --brand: #CC19F4;
+  --brand: #d135f4;
   --brand-light: #f0d0fa;
   --brand-dark: #a014c3;
   --sidebar-bg: #0f0f14;
@@ -225,7 +225,7 @@ body {
   gap: 8px;
 }
 
-.splash-text-swift { color: #CC19F4; }
+.splash-text-swift { color: #d135f4; }
 .splash-text-amp { color: rgba(255,255,255,0.3); font-weight: 300; }
 .splash-text-games { color: #ffffff; }
 
@@ -337,7 +337,7 @@ body {
   box-sizing: border-box;
 }
 .login-input:focus {
-  border-color: #CC19F4;
+  border-color: #d135f4;
   box-shadow: 0 0 0 3px rgba(204,25,244,0.15);
 }
 .login-input::placeholder {
@@ -391,7 +391,7 @@ body {
 .login-submit-btn {
   width: 100%;
   padding: 13px;
-  background: linear-gradient(135deg, #CC19F4 0%, #a014c3 100%);
+  background: linear-gradient(135deg, #d135f4 0%, #a014c3 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -741,8 +741,6 @@ body {
     margin: 0 !important;
     padding: 12mm 15mm 10mm 15mm !important;
     width: 210mm !important;
-    height: 297mm !important;
-    overflow: hidden !important;
   }
 }
 
