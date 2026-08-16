@@ -128,7 +128,7 @@ export default function InvoiceTemplate({ invoice = {}, settings = {}, scale = 1
         style={{
           width: '210mm',
           minHeight: '297mm',
-          padding: '12mm 15mm 10mm 15mm',
+          padding: '12mm 15mm 8mm 15mm',
           background: '#ffffff',
           color: '#1a1a1a',
           fontFamily: "'Open Sans', 'Inter', Helvetica, Arial, sans-serif",

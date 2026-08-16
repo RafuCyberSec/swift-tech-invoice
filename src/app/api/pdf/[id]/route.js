@@ -58,22 +58,9 @@ export async function GET(req, { params }) {
       });
     } catch (puppeteerError) {
       console.warn('Puppeteer not available, returning HTML for client-side printing:', puppeteerError.message);
-      // Return HTML that the client can print to PDF via window.print()
-      // Wrap in a full page with print-ready styling
-      const printableHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>${invoice.invoice_number || 'Invoice'}</title>
-  <script>
-    window.onload = function() {
-      window.print();
-    };
-  </script>
-</head>
-<body>${html.replace(/<!DOCTYPE html>|<\/?html>|<head>[\s\S]*?<\/head>|<\/?body>/gi, '')}</body>
-</html>`;
-      return new NextResponse(html, {
+      // Inject auto-print script into the HTML so browser opens print dialog automatically
+      const printableHtml = html.replace('</head>', `<title>${invoice.invoice_number || 'Invoice'}</title><script>window.onload=function(){window.print();};</script></head>`);
+      return new NextResponse(printableHtml, {
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
         },
@@ -280,12 +267,14 @@ function buildInvoiceHtml(invoice, settings, fontData) {
       color: #1a1a1a;
       line-height: 1.4;
       background: #ffffff;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
     @page { size: A4 portrait; margin: 0; }
   </style>
 </head>
 <body>
-  <div style="width:210mm;padding:12mm 15mm 10mm 15mm;background:#fff">
+  <div style="width:210mm;padding:12mm 15mm 8mm 15mm;background:#fff">
 
     <!-- Header: logo left, company right — mb 35pt -->
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:35pt">
