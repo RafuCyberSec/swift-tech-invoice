@@ -104,7 +104,7 @@ function initializeSchema(db) {
     CREATE TABLE IF NOT EXISTS settings (
       id INTEGER PRIMARY KEY DEFAULT 1,
       company_name TEXT DEFAULT 'Swift Tech & Games',
-      website TEXT DEFAULT 'swifttechngames.com',
+      website TEXT DEFAULT 'www.swifttechngames.com',
       email TEXT DEFAULT 'info@swifttechngames.com',
       phone TEXT DEFAULT '+92 328 0445543',
       brand_color TEXT DEFAULT '#d135f4',
