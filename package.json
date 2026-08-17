@@ -4,27 +4,37 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && prisma migrate deploy && next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint"
   },
+  "prisma": {
+    "seed": "node --experimental-strip-types prisma/seed.mjs"
+  },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
     "@vercel/analytics": "^2.0.1",
     "bcryptjs": "^3.0.2",
+    "dotenv": "^17.4.2",
     "next": "16.3.0",
     "next-auth": "5.0.0-beta.28",
+    "pg": "^8.23.0",
     "puppeteer": "^25.5.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "sql.js": "^1.12.0"
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
+    "prisma": "^7.9.1",
     "tailwindcss": "^4"
   },
   "allowScripts": {
-    "puppeteer@25.5.0": true
+    "puppeteer@25.5.0": true,
+    "prisma@7.9.1": true,
+    "@prisma/engines@7.9.1": true
   }
 }

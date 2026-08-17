@@ -1,0 +1,75 @@
+datasource db {
+  provider = "postgresql"
+  schemas  = ["invoice"]
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         String    @default("staff")
+  isSystem     Boolean   @default(false) @map("is_system")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt      @map("updated_at")
+
+  createdInvoices Invoice[] @relation("CreatedBy")
+  updatedInvoices Invoice[] @relation("UpdatedBy")
+
+  @@map("users")
+  @@schema("invoice")
+}
+
+model Settings {
+  id                Int    @id @default(1)
+  companyName       String @default("Swift Tech & Games")        @map("company_name")
+  website           String @default("www.swifttechngames.com")
+  email             String @default("info@swifttechngames.com")
+  phone             String @default("+92 328 0445543")
+  brandColor        String @default("#d135f4")                   @map("brand_color")
+  currencySymbol    String @default("₨")                        @map("currency_symbol")
+  currencyName      String @default("PKR")                       @map("currency_name")
+  logoPath          String @default("/logo.svg")                 @map("logo_path")
+  invoicePrefix     String @default("ACC-SINV")                  @map("invoice_prefix")
+  defaultNotes      String @default("Thank you for your purchase at Swift Tech & Games.") @map("default_notes")
+  defaultTerms      String @default("Warranty void if burnt or broken. Original box, stickers, accessories, manuals and invoice are required for warranty.\nWarranty claims can take between 20 to 60 days.") @map("default_terms")
+  nextInvoiceNumber Int    @default(1)                           @map("next_invoice_number")
+
+  @@map("settings")
+  @@schema("invoice")
+}
+
+model Invoice {
+  id              Int      @id @default(autoincrement())
+  invoiceNumber   String   @unique                               @map("invoice_number")
+  customerName    String?                                        @map("customer_name")
+  customerAddress String?                                        @map("customer_address")
+  customerPhone   String?                                        @map("customer_phone")
+  invoiceDate     String?                                        @map("invoice_date")
+  dueDate         String?                                        @map("due_date")
+  lineItems       Json     @default("[]")                        @map("line_items")
+  shippingCharges Float    @default(0)                           @map("shipping_charges")
+  shippingFree    Boolean  @default(false)                       @map("shipping_free")
+  discountAmount  Float    @default(0)                           @map("discount_amount")
+  notes           String?
+  terms           String?
+  status          String   @default("draft")
+  createdBy       Int                                            @map("created_by")
+  updatedBy       Int?                                           @map("updated_by")
+  createdAt       DateTime @default(now())                       @map("created_at")
+  updatedAt       DateTime @updatedAt                            @map("updated_at")
+
+  creator         User     @relation("CreatedBy", fields: [createdBy], references: [id])
+  updater         User?    @relation("UpdatedBy", fields: [updatedBy], references: [id])
+
+  @@index([createdBy])
+  @@index([customerName])
+  @@index([invoiceNumber])
+  @@map("invoices")
+  @@schema("invoice")
+}

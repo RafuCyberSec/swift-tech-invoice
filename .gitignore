@@ -21,8 +21,10 @@
 /build
 
 # database
-/database/*.db
-/database/*.db-journal
+/database/
+
+# prisma generated client
+/src/generated/
 
 # misc
 .DS_Store

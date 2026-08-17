@@ -1,322 +1,112 @@
-import initSqlJs from 'sql.js';
-import path from 'path';
-import fs from 'fs';
-
-const isVercel = process.env.VERCEL === '1' || process.env.VERCEL;
-// WARNING: On Vercel, /tmp is ephemeral — wiped on cold starts.
-// For persistent data on Vercel, use an external database (e.g. Turso, PlanetScale, Supabase).
-// Locally, the database is stored in ./database/invoices.db and persists across restarts.
-const DB_DIR = isVercel 
-  ? path.join('/tmp', 'database') 
-  : path.join(process.cwd(), 'database');
-const DB_PATH = path.join(DB_DIR, 'invoices.db');
-
-// Admin credentials are now securely managed via environment variables for SaaS deployment
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'rafay@swifttechngames.com';
-const ADMIN_NAME = process.env.ADMIN_NAME || 'System Admin';
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '$2b$12$9U4O4etstff9iFJdP4Sxku4bqK5QH.MnXFpPob6dyawvfOZUe4XoO';
-
-const DEFAULT_NOTES = 'Thank you for your purchase at Swift Tech & Games.';
-const DEFAULT_TERMS = 'Warranty void if burnt or broken. Original box, stickers, accessories, manuals and invoice are required for warranty.\nWarranty claims can take between 20 to 60 days.';
-
-let _db = null;
-let _SQL = null;
-let _dbPromise = null; // Promise to prevent async race conditions during init
-
-/**
- * Get or create the database connection (singleton)
- * sql.js is a pure-JS SQLite — no native compilation needed
- */
-export function getDb() {
-  if (_db) return Promise.resolve(_db);
-  
-  if (!_dbPromise) {
-    _dbPromise = initializeDb().catch(err => {
-      _dbPromise = null;
-      throw err;
-    });
-  }
-  return _dbPromise;
-}
-
-async function initializeDb() {
-  // Ensure the database directory exists
-  if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR, { recursive: true });
-  }
-
-  if (!_SQL) {
-    _SQL = await initSqlJs();
-  }
-
-  // Load existing database or create new
-  if (fs.existsSync(DB_PATH)) {
-    const fileBuffer = fs.readFileSync(DB_PATH);
-    _db = new _SQL.Database(fileBuffer);
-  } else {
-    _db = new _SQL.Database();
-  }
-
-  _db.run('PRAGMA journal_mode = WAL');
-  _db.run('PRAGMA foreign_keys = ON');
-
-  // Initialize schema
-  initializeSchema(_db);
-
-  // Run migrations for existing databases
-  runMigrations(_db);
-
-  // Seed admin user and settings
-  seedAdminUser(_db);
-  seedSettings(_db);
-
-  // Persist
-  saveDb();
-
-  return _db;
-}
-
-function saveDb() {
-  if (!_db) return;
-  const data = _db.export();
-  const buffer = Buffer.from(data);
-  // Atomic write to prevent file corruption
-  const tempPath = DB_PATH + '.tmp';
-  fs.writeFileSync(tempPath, buffer);
-  fs.renameSync(tempPath, DB_PATH);
-}
-
-function initializeSchema(db) {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      email TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'staff' CHECK (role IN ('admin', 'staff')),
-      is_system INTEGER NOT NULL DEFAULT 0,
-      created_at TEXT DEFAULT (datetime('now')),
-      updated_at TEXT DEFAULT (datetime('now'))
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS settings (
-      id INTEGER PRIMARY KEY DEFAULT 1,
-      company_name TEXT DEFAULT 'Swift Tech & Games',
-      website TEXT DEFAULT 'www.swifttechngames.com',
-      email TEXT DEFAULT 'info@swifttechngames.com',
-      phone TEXT DEFAULT '+92 328 0445543',
-      brand_color TEXT DEFAULT '#d135f4',
-      currency_symbol TEXT DEFAULT '₨',
-      currency_name TEXT DEFAULT 'PKR',
-      logo_path TEXT DEFAULT '/logo.svg',
-      invoice_prefix TEXT DEFAULT 'ACC-SINV',
-      default_notes TEXT DEFAULT 'Thank you for your purchase at Swift Tech & Games.',
-      default_terms TEXT DEFAULT 'Warranty void if burnt or broken. Original box, stickers, accessories, manuals and invoice are required for warranty.
-Warranty claims can take between 20 to 60 days.',
-      next_invoice_number INTEGER DEFAULT 1
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS invoices (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      invoice_number TEXT UNIQUE NOT NULL,
-      customer_name TEXT,
-      customer_address TEXT,
-      customer_phone TEXT,
-      invoice_date TEXT,
-      due_date TEXT,
-      line_items TEXT,
-      shipping_charges REAL DEFAULT 0,
-      shipping_free INTEGER DEFAULT 0,
-      discount_amount REAL DEFAULT 0,
-      notes TEXT,
-      terms TEXT,
-      status TEXT DEFAULT 'draft',
-      created_by INTEGER NOT NULL REFERENCES users(id),
-      updated_by INTEGER REFERENCES users(id),
-      created_at TEXT DEFAULT (datetime('now')),
-      updated_at TEXT DEFAULT (datetime('now'))
-    )
-  `);
-
-  // Create indexes
-  try {
-    db.run('CREATE INDEX IF NOT EXISTS idx_invoices_created_by ON invoices(created_by)');
-    db.run('CREATE INDEX IF NOT EXISTS idx_invoices_customer_name ON invoices(customer_name)');
-    db.run('CREATE INDEX IF NOT EXISTS idx_invoices_invoice_number ON invoices(invoice_number)');
-  } catch {
-    // Indexes may already exist
-  }
-}
-
-/**
- * Run migrations for existing databases that may lack newer columns
- */
-function runMigrations(db) {
-  // Check if default_notes column exists in settings
-  try {
-    const tableInfo = db.exec("PRAGMA table_info(settings)");
-    if (tableInfo.length > 0) {
-      const columns = tableInfo[0].values.map(row => row[1]);
-      if (!columns.includes('default_notes')) {
-        db.run(`ALTER TABLE settings ADD COLUMN default_notes TEXT DEFAULT '${DEFAULT_NOTES}'`);
-      }
-    }
-  } catch {
-    // Column might already exist
-  }
-
-  // Check if is_system column exists in users
-  try {
-    const tableInfo = db.exec("PRAGMA table_info(users)");
-    if (tableInfo.length > 0) {
-      const columns = tableInfo[0].values.map(row => row[1]);
-      if (!columns.includes('is_system')) {
-        db.run("ALTER TABLE users ADD COLUMN is_system INTEGER NOT NULL DEFAULT 0");
-      }
-    }
-  } catch {
-    // Column might already exist
-  }
-}
-
-/**
- * Auto-seed the hardcoded admin user if not present
- */
-function seedAdminUser(db) {
-  const result = db.exec('SELECT id, password_hash, name FROM users WHERE email = ?', [ADMIN_EMAIL]);
-  if (result.length === 0 || result[0].values.length === 0) {
-    // Admin doesn't exist — create with default name
-    db.run(
-      'INSERT INTO users (name, email, password_hash, role, is_system) VALUES (?, ?, ?, ?, ?)',
-      [ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD_HASH, 'admin', 1]
-    );
-  } else {
-    // Admin exists — ensure password and role are up to date, but DO NOT overwrite the name.
-    // The user may have changed their display name via the UI — respect that.
-    const userId = result[0].values[0][0];
-    db.run(
-      'UPDATE users SET password_hash = ?, role = ?, is_system = 1 WHERE id = ?',
-      [ADMIN_PASSWORD_HASH, 'admin', userId]
-    );
-  }
-}
-
-/**
- * Seed settings row if it doesn't exist, ensuring defaults are always populated
- */
-function seedSettings(db) {
-  const result = db.exec('SELECT id FROM settings WHERE id = 1');
-  if (result.length === 0 || result[0].values.length === 0) {
-    db.run(`INSERT INTO settings (id, default_notes, default_terms) VALUES (1, ?, ?)`, [DEFAULT_NOTES, DEFAULT_TERMS]);
-  } else {
-    // Ensure default_notes and default_terms are not empty
-    const settings = db.exec('SELECT default_notes, default_terms FROM settings WHERE id = 1');
-    if (settings.length > 0 && settings[0].values.length > 0) {
-      const [notes, terms] = settings[0].values[0];
-      if (!notes) {
-        db.run('UPDATE settings SET default_notes = ? WHERE id = 1', [DEFAULT_NOTES]);
-      }
-      if (!terms) {
-        db.run('UPDATE settings SET default_terms = ? WHERE id = 1', [DEFAULT_TERMS]);
-      }
-    }
-  }
-}
-
-// ============================================================
-// Helper to convert sql.js result to object
-// ============================================================
-function resultToObjects(result) {
-  if (!result || result.length === 0) return [];
-  const { columns, values } = result[0];
-  return values.map(row => {
-    const obj = {};
-    columns.forEach((col, i) => {
-      obj[col] = row[i];
-    });
-    return obj;
-  });
-}
-
-function resultToObject(result) {
-  const objects = resultToObjects(result);
-  return objects.length > 0 ? objects[0] : null;
-}
+import { prisma } from './prisma.js';
 
 // ============================================================
 // User Queries
 // ============================================================
 
 export async function getUserByEmail(email) {
-  const db = await getDb();
-  const result = db.exec('SELECT * FROM users WHERE email = ?', [email]);
-  return resultToObject(result);
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return null;
+  // Map to snake_case for compatibility with existing auth/API code
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    password_hash: user.passwordHash,
+    role: user.role,
+    is_system: user.isSystem,
+    created_at: user.createdAt,
+    updated_at: user.updatedAt,
+  };
 }
 
 export async function getUserById(id) {
-  const db = await getDb();
-  const result = db.exec(
-    'SELECT id, name, email, role, is_system, created_at, updated_at FROM users WHERE id = ?',
-    [id]
-  );
-  return resultToObject(result);
+  const user = await prisma.user.findUnique({
+    where: { id: Number(id) },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      isSystem: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+  if (!user) return null;
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    is_system: user.isSystem,
+    created_at: user.createdAt,
+    updated_at: user.updatedAt,
+  };
 }
 
 export async function getAllUsers() {
-  const db = await getDb();
-  const result = db.exec(
-    'SELECT id, name, email, role, is_system, created_at, updated_at FROM users ORDER BY created_at DESC'
-  );
-  return resultToObjects(result);
+  const users = await prisma.user.findMany({
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      isSystem: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+  return users.map(u => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    role: u.role,
+    is_system: u.isSystem,
+    created_at: u.createdAt,
+    updated_at: u.updatedAt,
+  }));
 }
 
 export async function createUser(name, email, passwordHash, role = 'staff') {
-  const db = await getDb();
-  db.run(
-    'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
-    [name, email, passwordHash, role]
-  );
-  saveDb();
-  // sql.js: get the last inserted row id
-  const result = db.exec('SELECT MAX(id) as id FROM users');
-  return result[0]?.values[0]?.[0] || 1;
+  const user = await prisma.user.create({
+    data: {
+      name,
+      email,
+      passwordHash,
+      role,
+    },
+  });
+  return user.id;
 }
 
 export async function updateUser(id, data) {
-  const db = await getDb();
-  const fields = [];
-  const values = [];
-  for (const [key, value] of Object.entries(data)) {
-    if (key !== 'id') {
-      fields.push(`${key} = ?`);
-      values.push(value);
-    }
-  }
-  fields.push("updated_at = datetime('now')");
-  values.push(id);
-  db.run(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
-  saveDb();
+  const updateData = {};
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.email !== undefined) updateData.email = data.email;
+  if (data.role !== undefined) updateData.role = data.role;
+  if (data.password_hash !== undefined) updateData.passwordHash = data.password_hash;
+
+  await prisma.user.update({
+    where: { id: Number(id) },
+    data: updateData,
+  });
 }
 
 export async function deleteUser(id) {
-  const db = await getDb();
-  // Prevent deletion of system admin user
-  const user = resultToObject(db.exec('SELECT is_system FROM users WHERE id = ?', [id]));
-  if (user && user.is_system) {
+  const user = await prisma.user.findUnique({
+    where: { id: Number(id) },
+    select: { isSystem: true },
+  });
+  if (user && user.isSystem) {
     throw new Error('Cannot delete the system administrator account');
   }
-  db.run('DELETE FROM users WHERE id = ?', [id]);
-  saveDb();
+  await prisma.user.delete({ where: { id: Number(id) } });
 }
 
 export async function getUserCount() {
-  const db = await getDb();
-  const result = db.exec('SELECT COUNT(*) as count FROM users');
-  return result[0].values[0][0];
+  return await prisma.user.count();
 }
 
 // ============================================================
@@ -324,154 +114,183 @@ export async function getUserCount() {
 // ============================================================
 
 export async function getSettings() {
-  const db = await getDb();
-  const result = db.exec('SELECT * FROM settings WHERE id = 1');
-  return resultToObject(result);
+  const s = await prisma.settings.findUnique({ where: { id: 1 } });
+  if (!s) return null;
+  return {
+    id: s.id,
+    company_name: s.companyName,
+    website: s.website,
+    email: s.email,
+    phone: s.phone,
+    brand_color: s.brandColor,
+    currency_symbol: s.currencySymbol,
+    currency_name: s.currencyName,
+    logo_path: s.logoPath,
+    invoice_prefix: s.invoicePrefix,
+    default_notes: s.defaultNotes,
+    default_terms: s.defaultTerms,
+    next_invoice_number: s.nextInvoiceNumber,
+  };
 }
 
 export async function updateSettings(data) {
-  const db = await getDb();
-  const fields = [];
-  const values = [];
-  for (const [key, value] of Object.entries(data)) {
-    if (key !== 'id') {
-      fields.push(`${key} = ?`);
-      values.push(value);
-    }
-  }
-  if (fields.length === 0) return;
-  db.run(`UPDATE settings SET ${fields.join(', ')} WHERE id = 1`, values);
-  saveDb();
+  const updateData = {};
+  if (data.company_name !== undefined) updateData.companyName = data.company_name;
+  if (data.website !== undefined) updateData.website = data.website;
+  if (data.email !== undefined) updateData.email = data.email;
+  if (data.phone !== undefined) updateData.phone = data.phone;
+  if (data.brand_color !== undefined) updateData.brandColor = data.brand_color;
+  if (data.currency_symbol !== undefined) updateData.currencySymbol = data.currency_symbol;
+  if (data.currency_name !== undefined) updateData.currencyName = data.currency_name;
+  if (data.logo_path !== undefined) updateData.logoPath = data.logo_path;
+  if (data.invoice_prefix !== undefined) updateData.invoicePrefix = data.invoice_prefix;
+  if (data.default_notes !== undefined) updateData.defaultNotes = data.default_notes;
+  if (data.default_terms !== undefined) updateData.defaultTerms = data.default_terms;
+  if (data.next_invoice_number !== undefined) updateData.nextInvoiceNumber = data.next_invoice_number;
+
+  if (Object.keys(updateData).length === 0) return;
+
+  await prisma.settings.update({
+    where: { id: 1 },
+    data: updateData,
+  });
 }
 
 // ============================================================
 // Invoice Queries
 // ============================================================
 
+/**
+ * Map a Prisma invoice (with included creator) to the snake_case shape
+ * the frontend and PDF route expect.
+ */
+function mapInvoice(inv) {
+  return {
+    id: inv.id,
+    invoice_number: inv.invoiceNumber,
+    customer_name: inv.customerName,
+    customer_address: inv.customerAddress,
+    customer_phone: inv.customerPhone,
+    invoice_date: inv.invoiceDate,
+    due_date: inv.dueDate,
+    line_items: inv.lineItems,
+    shipping_charges: inv.shippingCharges,
+    shipping_free: inv.shippingFree,
+    discount_amount: inv.discountAmount,
+    notes: inv.notes,
+    terms: inv.terms,
+    status: inv.status,
+    created_by: inv.createdBy,
+    updated_by: inv.updatedBy,
+    created_at: inv.createdAt,
+    updated_at: inv.updatedAt,
+    creator_name: inv.creator?.name || null,
+  };
+}
+
 export async function getInvoiceById(id) {
-  const db = await getDb();
-  const result = db.exec(`
-    SELECT i.*, u.name as creator_name
-    FROM invoices i
-    LEFT JOIN users u ON i.created_by = u.id
-    WHERE i.id = ?
-  `, [id]);
-  const invoice = resultToObject(result);
-  if (invoice && invoice.line_items) {
-    try {
-      invoice.line_items = JSON.parse(invoice.line_items);
-    } catch {
-      invoice.line_items = [];
-    }
-  }
-  return invoice;
+  const inv = await prisma.invoice.findUnique({
+    where: { id: Number(id) },
+    include: { creator: { select: { name: true } } },
+  });
+  if (!inv) return null;
+  return mapInvoice(inv);
 }
 
 export async function getAllInvoices(search = '') {
-  const db = await getDb();
-  let query = `
-    SELECT i.*, u.name as creator_name
-    FROM invoices i
-    LEFT JOIN users u ON i.created_by = u.id
-    WHERE 1=1
-  `;
-  const params = [];
+  const where = search
+    ? {
+        OR: [
+          { customerName: { contains: search, mode: 'insensitive' } },
+          { invoiceNumber: { contains: search, mode: 'insensitive' } },
+        ],
+      }
+    : {};
 
-  if (search) {
-    query += ` AND (i.customer_name LIKE ? OR i.invoice_number LIKE ?)`;
-    params.push(`%${search}%`, `%${search}%`);
-  }
+  const invoices = await prisma.invoice.findMany({
+    where,
+    include: { creator: { select: { name: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
 
-  query += ` ORDER BY i.created_at DESC`;
-
-  const result = db.exec(query, params);
-  const invoices = resultToObjects(result);
-  return invoices.map(inv => ({
-    ...inv,
-    line_items: inv.line_items ? (() => { try { return JSON.parse(inv.line_items); } catch { return []; } })() : [],
-  }));
+  return invoices.map(mapInvoice);
 }
 
 export async function createInvoice(data) {
-  const db = await getDb();
-  db.run(`
-    INSERT INTO invoices (
-      invoice_number, customer_name, customer_address, customer_phone,
-      invoice_date, due_date, line_items, shipping_charges, shipping_free,
-      discount_amount, notes, terms, status, created_by, updated_by
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `, [
-    data.invoice_number,
-    data.customer_name || '',
-    data.customer_address || '',
-    data.customer_phone || '',
-    data.invoice_date || '',
-    data.due_date || '',
-    JSON.stringify(data.line_items || []),
-    data.shipping_charges || 0,
-    data.shipping_free ? 1 : 0,
-    data.discount_amount || 0,
-    data.notes || '',
-    data.terms || '',
-    data.status || 'draft',
-    data.created_by,
-    data.created_by,
-  ]);
-  saveDb();
-  const result = db.exec('SELECT MAX(id) as id FROM invoices');
-  return result[0]?.values[0]?.[0] || 1;
+  const inv = await prisma.invoice.create({
+    data: {
+      invoiceNumber: data.invoice_number,
+      customerName: data.customer_name || '',
+      customerAddress: data.customer_address || '',
+      customerPhone: data.customer_phone || '',
+      invoiceDate: data.invoice_date || '',
+      dueDate: data.due_date || '',
+      lineItems: data.line_items || [],
+      shippingCharges: data.shipping_charges || 0,
+      shippingFree: !!data.shipping_free,
+      discountAmount: data.discount_amount || 0,
+      notes: data.notes || '',
+      terms: data.terms || '',
+      status: data.status || 'draft',
+      createdBy: data.created_by,
+      updatedBy: data.created_by,
+    },
+  });
+  return inv.id;
 }
 
 export async function updateInvoice(id, data, userId) {
-  const db = await getDb();
-  const fields = [];
-  const values = [];
-  const allowedFields = [
-    'customer_name', 'customer_address', 'customer_phone',
-    'invoice_date', 'due_date', 'shipping_charges', 'shipping_free',
-    'discount_amount', 'notes', 'terms', 'status'
-  ];
+  const updateData = {};
+  const allowedFields = {
+    customer_name: 'customerName',
+    customer_address: 'customerAddress',
+    customer_phone: 'customerPhone',
+    invoice_date: 'invoiceDate',
+    due_date: 'dueDate',
+    shipping_charges: 'shippingCharges',
+    discount_amount: 'discountAmount',
+    notes: 'notes',
+    terms: 'terms',
+    status: 'status',
+  };
 
-  for (const key of allowedFields) {
-    if (data[key] !== undefined) {
-      fields.push(`${key} = ?`);
-      values.push(key === 'shipping_free' ? (data[key] ? 1 : 0) : data[key]);
+  for (const [snakeKey, camelKey] of Object.entries(allowedFields)) {
+    if (data[snakeKey] !== undefined) {
+      updateData[camelKey] = data[snakeKey];
     }
   }
 
-  if (data.line_items !== undefined) {
-    fields.push('line_items = ?');
-    values.push(JSON.stringify(data.line_items));
+  if (data.shipping_free !== undefined) {
+    updateData.shippingFree = !!data.shipping_free;
   }
 
-  fields.push('updated_by = ?');
-  values.push(userId);
-  fields.push("updated_at = datetime('now')");
-  values.push(id);
+  if (data.line_items !== undefined) {
+    updateData.lineItems = data.line_items;
+  }
 
-  db.run(`UPDATE invoices SET ${fields.join(', ')} WHERE id = ?`, values);
-  saveDb();
+  updateData.updatedBy = userId;
+
+  await prisma.invoice.update({
+    where: { id: Number(id) },
+    data: updateData,
+  });
 }
 
 export async function deleteInvoice(id) {
-  const db = await getDb();
-  db.run('DELETE FROM invoices WHERE id = ?', [id]);
-  saveDb();
+  await prisma.invoice.delete({ where: { id: Number(id) } });
 }
 
 export async function getNextInvoiceNumber() {
-  const db = await getDb();
-  const result = db.exec('SELECT invoice_prefix, next_invoice_number FROM settings WHERE id = 1');
-  const settings = resultToObject(result);
+  // Atomic increment — read and update in one operation
+  const settings = await prisma.settings.update({
+    where: { id: 1 },
+    data: { nextInvoiceNumber: { increment: 1 } },
+  });
+
   const year = new Date().getFullYear();
-  const num = settings?.next_invoice_number || 1;
-  const prefix = settings?.invoice_prefix || 'ACC-SINV';
+  // The returned value is AFTER increment, so the number we want is (returned - 1)
+  const num = settings.nextInvoiceNumber - 1;
+  const prefix = settings.invoicePrefix || 'ACC-SINV';
   const paddedNum = String(num).padStart(5, '0');
-  const invoiceNumber = `${prefix}-${year}-${paddedNum}`;
-
-  // Increment the counter
-  db.run('UPDATE settings SET next_invoice_number = ? WHERE id = 1', [num + 1]);
-  saveDb();
-
-  return invoiceNumber;
+  return `${prefix}-${year}-${paddedNum}`;
 }

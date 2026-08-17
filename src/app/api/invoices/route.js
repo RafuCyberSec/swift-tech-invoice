@@ -46,7 +46,7 @@ export async function POST(req) {
       invoiceNumber,
     });
   } catch (error) {
-    if (error.message?.includes('UNIQUE constraint')) {
+    if (error.code === 'P2002') {
       return NextResponse.json(
         { error: 'Invoice number already exists' },
         { status: 400 }

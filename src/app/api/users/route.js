@@ -36,7 +36,7 @@ export async function POST(req) {
 
     return NextResponse.json({ success: true, userId });
   } catch (error) {
-    if (error.message?.includes('UNIQUE constraint')) {
+    if (error.code === 'P2002') {
       return NextResponse.json({ error: 'A user with this email already exists' }, { status: 400 });
     }
     console.error('Users POST error:', error);
